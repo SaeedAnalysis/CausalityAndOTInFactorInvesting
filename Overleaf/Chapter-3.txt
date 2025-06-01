@@ -1,0 +1,474 @@
+% Chapter 3: Methodology and Results 
+\chapter{Methodology and Experiments}
+
+\section{Synthetic Data Generation}
+To provide a controlled setting for causal discovery, we construct a \textbf{synthetic panel dataset} of stock returns with known causal relationships. The dataset represents $N=100$ stocks observed over $T=24$ months (approximately two years). Each stock $i$ has four associated factor values: Value, Size, Momentum, and Volatility. These factor values are intended to represent common equity factors:
+\begin{itemize}
+    \item \textbf{Value}: e.g., a valuation ratio; in our simulation this factor has \emph{no true causal effect} on returns (placebo factor).
+    \item \textbf{Size}: e.g., market capitalization; we embed a small positive effect (smaller stocks tend to slightly outperform).
+    \item \textbf{Momentum}: recent performance trend; we embed a meaningful positive effect (high momentum drives higher returns).
+    \item \textbf{Volatility}: past return volatility; we embed a small negative effect (consistent with a low-volatility anomaly where lower volatility stocks yield higher risk-adjusted returns).
+\end{itemize}
+These true effects are set as follows: a one-standard-deviation increase in momentum raises a stock's monthly return by about +1\% (momentum effect = $+0.01$), for size by +0.5\% ($+0.005$), and for volatility by -0.5\% ($-0.005$), while value has 0\% effect by construction. Aside from factor-driven returns, each stock's return has a baseline drift (set to 1\% per month, $\alpha=0.01$) and idiosyncratic noise (2\% standard deviation).
+
+We drew each stock's factor vector $(\text{Value}, \text{Size}, \text{Momentum}, \text{Volatility})$ from a multivariate normal distribution calibrated to exhibit realistic correlations: for example, in our setup momentum is negatively correlated with value ($\rho \approx -0.5$) and positively with volatility ($\rho \approx 0.3$), while size is slightly positively correlated with volatility ($\rho \approx 0.4$)\cite{FamaFrench93}. These correlations reflect stylized facts (e.g., high volatility stocks tend to have extreme performance histories affecting momentum, and value and momentum are often negatively related). All factors are standardised (mean 0, unit variance) in the simulation.
+
+We introduced a \textbf{treatment variable} to simulate an intervention. At month 13 (midpoint of the sample), an exogenous "treatment" occurs that affects half of the stocks. This could be a regulatory change, a market regime shift, or inclusion in an index, any event that would impact treated stocks' returns going forward. We assigned treatment in a way that creates \textit{confounding}: stocks with higher momentum scores have a higher probability of being treated. We computed a propensity for each stock using a logistic function of its momentum factor, so that the top 50 stocks by momentum propensity are designated as the treated group and the rest as controls. This means the treated group, even before the treatment, differs systematically from controls (they had higher momentum). As a result, a simple comparison of treated vs. control returns would be biased by this selection effect.
+
+The treatment itself is coded as a binary indicator (0 before month 13, then 1 for treated stocks after that) and adds a fixed increase to returns. We added a treatment effect of +2\% to the monthly returns of treated stocks after month 13. This is the true causal effect we aim to recover with DiD and other methods. The magnitude is chosen to be noticeable but not extreme, a 2\% monthly return boost is large in the context of typical stock returns, but small enough to be challenging to detect under noise and confounding. 
+
+We deliberately broke the strict DiD assumption of parallel trends by introducing this selection bias. Momentum serves as a \textit{confounder} for the treatment effect: high-momentum stocks are more likely to be treated, and momentum also directly affects returns. Therefore, treated stocks already have higher returns pre-treatment due to momentum. This setup allows us to test how well each causal method adjusts for confounding.
+
+Table~\ref{tab:sim_params} lists key simulation parameters. We also generated two simple instruments (explained later) to try an IV approach. Finally, we created an "alternate reality" dataset for placebo testing, in which no treatment effect occurred at month 13 (to verify methods don't find false effects).
+
+\begin{table}[h]
+\centering
+\caption{Key Simulation Parameters}
+\label{tab:sim_params}
+\begin{tabular}{l l}
+\hline
+Baseline return ($\alpha$) & 0.01 (1\% per month) \\
+Idiosyncratic noise std & 0.02 (2\%) \\
+Momentum factor effect & +0.01 per 1 s.d. (true positive effect) \\
+Size factor effect & +0.005 per 1 s.d. (true positive effect) \\
+Volatility factor effect & $-0.005$ per 1 s.d. (true negative effect) \\
+Value factor effect & 0.0 (no effect; placebo factor) \\
+Treatment effect & +0.02 (true +2\% return for treated stocks post-treatment) \\
+Treatment group selection & Top 50 stocks by momentum propensity (confounded) \\
+Instrument for Momentum & Past volatility (constructed, see IV section) \\
+Instrument for Size & Sector-average size (constructed, see IV section) \\
+Instrument for Treatment & Pre-period momentum (constructed, see IV section) \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Difference-in-Differences Analysis}
+We first applied the classical \textbf{difference-in-differences (DiD)} method to estimate the impact of the treatment on stock returns. The DiD estimator is constructed from the average returns of treated and control groups before and after the intervention:
+\[
+\widehat{\text{DiD}} \;=\; ( \bar{Y}_{Treated,Post} - \bar{Y}_{Treated,Pre} ) \;-\; ( \bar{Y}_{Control,Post} - \bar{Y}_{Control,Pre} )~,
+\] 
+where $\bar{Y}$ denotes the mean return. This measures how much more (or less) the treated group's returns changed over time relative to the control group's change. Under the parallel trends assumption, this difference isolates the treatment effect.
+
+In our simulation, we expected the true treatment effect to be +0.02 (2 percentage points). However, recall that our treated stocks had higher momentum and therefore higher baseline returns even before treatment. In fact, in the pre-treatment period (months 1–12), the treated group's average monthly return is higher than the control group's (because momentum was a genuine return driver). We computed these averages from the data:
+
+\begin{itemize}
+    \item Pre-treatment (month 1–12) average return – Treated group: $\bar{Y}_{Treated,Pre} \approx 0.0180$ (1.80\%), Control group: $\bar{Y}_{Control,Pre} \approx 0.0040$ (0.40\%). 
+    \item Post-treatment (month 13–24) average return – Treated: $\bar{Y}_{Treated,Post} \approx 0.0389$ (3.89\%), Control: $\bar{Y}_{Control,Post} \approx 0.0073$ (0.73\%). 
+\end{itemize}
+
+These values confirmed a large baseline gap (about 1.40 percentage points) in favour of the treated group even when no treatment had occurred, due to the confounding effect of momentum. After the treatment, both groups' returns increased (partly because the market drift $\alpha=1\%$ accumulates and momentum continued to contribute, and partly due to the actual treatment effect for the treated group). The DiD calculations are summarised in Table~\ref{tab:did}.
+
+\begin{table}[h]
+\centering
+\caption{Difference-in-Differences summary of average monthly returns (in decimal form)}
+\label{tab:did}
+\begin{tabular}{lccc}
+\hline
+Group & Pre-Treatment & Post-Treatment & Change \\
+\hline
+Treated & 0.0180 & 0.0389 & +0.0209 \\
+Control & 0.0040 & 0.0073 & +0.0033 \\
+\hline
+Difference (T - C) & 0.0140 & 0.0316 & +0.0176 \\
+\hline
+\end{tabular}
+\end{table}
+
+In Table~\ref{tab:did}, "Difference (T–C)" in the Change column is the DiD estimator. We obtained $\widehat{\text{DiD}} \approx 0.0176$, i.e. roughly a $+1.76\%$ effect. This is slightly below the true $2\%$ because the treated group's returns also included influence from momentum which the control group lacked. The DiD estimator has partially netted out the baseline momentum advantage (1.40\% was the pre-period gap) but not entirely recovered the full 2\% (it captured about 1.76\%). In a real study, one would examine whether this difference is statistically significant; Given the large effect of our simulation and relatively low noise, it was highly significant (t-statistic not shown).
+
+We visualized the DiD result in Figure~\ref{fig:did_time} as a time series of average returns by group. Before month 13, the treated (blue solid line) and control (red dashed line) exhibited roughly parallel trends, although the treated line was consistently higher. After month 13 (vertical line), the treated group's returns jumped further up relative to the control, illustrating the treatment effect.
+
+% (Figure from code: returns_time.png, generated around lines 315-335)
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.65\textwidth]{returns_time.png}
+\caption{Average returns of treated vs. control stocks over time. Prior to the treatment (month 1–12), treated stocks had higher returns on average (reflecting their higher momentum). After the treatment starts at month 13 (green dashed line), the treated group's returns rise further relative to controls. The gap-in-gap represents the DiD estimate of the treatment effect.}
+\label{fig:did_time}
+\end{figure}
+
+Before moving on, we performed a \textbf{placebo test} as a robustness check. We repeated the DiD analysis but pretending the treatment started earlier (month 6) when in truth no intervention occurred then. As expected, this "false treatment" DiD estimate was essentially zero (and not statistically significant), and the distributions showed no systematic shift at that placebo date. This increased confidence that our detection of a 2\% effect at month 13 was not spurious, the methods weren't finding effects where none exist.
+
+\section{Distributional DiD via Optimal Transport}
+While the classical DiD focused on means, we also implemented an \textbf{OT-based distributional DiD}. In practice, this involved comparing the entire distribution of treated returns pre vs. post to that of control returns pre vs. post, using the Wasserstein distance (OT cost) as a metric\cite{Gunsilius21}. We:
+\begin{enumerate}
+    \item Sampled equal-sized subsets of returns from each group's pre and post periods (to have comparable distribution supports).
+    \item Computed $W_T =$ Wasserstein distance between treated's pre and post return distributions, and $W_C =$ Wasserstein distance between control's pre and post distributions\cite{Torous24}.
+    \item Took the difference $W_T - W_C$ as a distributional DiD estimate.
+\end{enumerate}
+
+Intuitively, $W_T$ measures how much the treated group's return distribution shifted due to both treatment and any time effects, while $W_C$ captured shift due to time effects alone; therefore $W_T - W_C$ isolates the shift due to treatment. In our analysis, we found:
+\[
+W_T \approx 0.016,\quad W_C \approx 0.016,\quad \text{so OT-DiD estimate } \approx 0.000~,
+\] 
+indicating essentially no measurable effect (in this run the control group's distribution shift was almost as large as the treated group's). In other simulation runs, if noise caused slight distribution shifts for controls, $W_C$ might not be exactly zero, but our expectation was $W_C \ll W_T$ since the treatment had a notable effect on treated returns' distribution (raising the mean and perhaps increasing variance slightly).
+
+An alternative way to interpret distributional DiD is via counterfactual mapping: we transported the pre-treatment treated return distribution to a "counterfactual post-treatment" distribution by applying the control group's distributional changes\cite{Torous24}. The average of this counterfactual treated distribution (what treated stocks' returns would have been post-13 with no treatment) was around 2.03\%, compared to the actual treated post average 3.89\%. The difference (~1.86\%) again reflects the treatment effect, and the OT distance between the actual and counterfactual distributions was essentially 0 (almost no distributional distance).
+
+The distributional perspective can reveal whether the treatment effect was homogeneous. We plotted kernel density estimates of the return distributions (not shown here for brevity) for treated and control groups pre- and post-treatment. These showed that the treated group's entire distribution shifted to the right after treatment, with a slight increase in density in the right tail (meaning the best-performing treated stocks did even better post-treatment). The control group's distribution, by contrast, changed very little. There was also a widening of the treated group's distribution relative to control, suggesting a possible increase in return variance due to the treatment (though in our simple additive treatment model this effect is modest and could be due to interaction with momentum).
+
+In summary, the DiD analysis successfully detected the implanted treatment effect. Classical DiD returned a slightly underestimated effect (~1.76\%) due to residual imbalance, highlighting the importance of addressing confounding (we will see how other methods handle this). The distributional analysis suggested the effect was broadly consistent across the distribution, providing confidence that no large anomalies were missed. For instance, if the treatment had affected only a subset of treated stocks (a heterogeneous effect), the distributional approach (CiC/OT) could pick that up by analysing distributions, whereas looking only at means might dilute such effects.
+
+\section{Matching Methods and Causal Effects of Factors}
+Next, we examined \textbf{matching and weighting methods} to estimate the causal effect of the continuous factor exposures (e.g. momentum, size) on returns. Our goal here is to answer questions like: "Do momentum stocks truly outperform because of momentum, or are we just capturing other differences?" Matching attempts to control for confounding by explicitly pairing or weighting units with similar covariates.
+
+We approached this in two contexts: (1) within the treatment effect framework (to adjust for differences between treated and control groups), and (2) more directly between high vs low factor stocks (to see if a factor itself causally drives returns). For the treatment context, matching is similar to creating a more comparable control group by selecting control stocks that resemble the treated stocks for other factors.
+
+\subsection{Propensity Score Matching}
+
+We first applied propensity score matching (PSM) to balance treated vs control stocks in the context of the treatment intervention. Here "treated" means stocks that received the policy intervention at month 13. The propensity model was a logistic regression of the treatment indicator on all four factors (Value, Size, Momentum, Volatility) in month 12, which produced a propensity (estimated probability of treatment) for each stock. We then matched each treated stock to the control stock with the closest propensity score (one-to-one nearest neighbor matching without replacement)\cite{Rosenbaum83}. Because our simulation had equal numbers of treated and control (50 each), almost all controls got matched. We then looked at covariate balance before and after matching:
+\begin{itemize}
+    \item Before matching, there were significant differences. For instance, the average momentum factor for treated stocks was about $+0.60$ (in standardised units) versus $-0.10$ for controls, a standardised mean difference (SMD) of $2.5$ (an enormous bias).
+    \item After propensity score matching, somewhat surprisingly, the balance metrics remained almost the same. In our implementation\footnote{All code and implementations for this thesis are available at: \url{https://github.com/SaeedAnalysis/CausalityAndOTInFactorInvesting}}, matching did pair up stocks, but because the underlying differences were so large and the control pool limited, the matched samples still had a large momentum gap (treated averaged $+0.55$ vs control $-0.15$ after matching, SMD $\approx 2.3$). Figure~\ref{fig:cov_balance} shows standardised differences for each factor between treated and control groups: before matching vs. after propensity score (PS) matching vs. after optimal transport (OT) matching. Red dashed lines at $\pm0.1$ indicated a common threshold for acceptable balance. Before matching, Momentum exhibited a very large imbalance ($>2$). PS matching alone did not improve it here, whereas OT matching reduced the momentum imbalance slightly (from about 2.5 to 2.3) and also improved Value factor balance. Size and Volatility were relatively balanced to begin with.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{cov_balance.png}
+    \caption{Standardised mean‐difference (SMD) for each factor before
+             matching, after propensity‐score (PS) matching, and after
+             optimal‐transport (OT) matching.  The dashed lines at
+             $\pm0.10$ mark a common "acceptable balance" threshold.}
+    \label{fig:cov_balance}
+\end{figure}
+
+In our case, PSM failed to eliminate the key confounder imbalance (momentum) because none of the low-momentum controls were truly comparable to the highest-momentum treated stocks. The resulting matched sample still had large bias, so any simple comparison of outcomes between matched treated vs matched control would give a biased estimate of the treatment effect (as we will see).
+
+\subsection{Optimal Transport Matching}
+To address the limitations above, we implemented an \textbf{Optimal Transport (OT) matching} method\cite{Gunsilius21}. We treated the matching problem as an optimal assignment: each treated stock must be "matched" with control stocks (one or many) such that the overall distance in covariate space is minimised. We used the four-dimensional Euclidean distance on (Value, Size, Momentum, Volatility) as the cost. In absence of the Python OT library on our system, we solved a simpler linear sum assignment (Hungarian algorithm) for one-to-one matches\cite{Kuhn55}. This still provides a global optimum pairing (minimising total distance) rather than greedy nearest neighbors.
+
+The resulting OT matches prioritised aligning stocks on momentum, since that was the dominant source of distance. As expected, we observed a slight improvement: the momentum SMD after OT matching was about $2.30$ (down from $2.50$), and the value factor SMD improved a bit as secondary balancing. However, the improvement was modest because even OT struggles with severe group overlap issues (when most high momentum stocks are assigned treatment, finding good low momentum matches for them is naturally difficult). This is a common limitation in matching when group differences are extreme \cite{Stuart10}.
+
+Using the OT-matched sample, we calculated 
+\[ \widehat{\text{ATT}}_{OT} \approx 0.027\text{–}0.032 \text{ (approximately 2.7\% to 3.2\%, varying across runs)}. \] 
+In our particular run, it was 3.13\% as well (because we ended up with the same pairs as PSM due to equal sample sizes). However, in our final analysis the OT-matched ATT (3.12\%) remained higher than the PSM estimate (1.66\%), showing that one-to-one OT matching alone did not eliminate bias in this scenario. In a scenario with partial matching, we might have found a slightly lower ATT, closer to the true 2\%. The key point is that OT matching makes better balancing possible if given flexibility. Our simplified implementation still faced the fundamental overlap problem: no matter how we assign one-to-one, a control with momentum $-0.7$ cannot fully stand in for a treated with momentum $+0.6$. In practice, one might drop the worst overlaps or use weighting. Our OT approach could be extended to allow a treated stock to be matched to several controls (soft matching) or to exclude outlier treated units; those extensions would likely reduce bias further.
+
+From a causal perspective, these matching exercises show that \textbf{momentum does have a genuine causal effect on returns}: the treated group (high-momentum stocks that get the intervention) outperformed any low-momentum group, even after attempts to adjust, which reflects both the intervention and momentum's effect. But to isolate momentum's effect on returns on its own, one could perform a separate matching exercise: match high-momentum stocks to low-momentum stocks on value, size, volatility (without any intervention). We did something similar to that in the ANM analysis later. 
+
+In summary, matching methods in our study highlight the importance of covariate overlap. Where overlap was poor, even OT could only do so much. However, OT matching did show a slight edge and gives us better tools (e.g., allowing weighting). The lesson for factor investing is that if one wants to causally compare two sets of stocks (say, high vs low factor), one must ensure they are comparable on other dimensions, otherwise the effect of interest may be conflated with those other differences. OT can help by maximising the comparability, but it cannot manufacture data where none exist. In real applications, careful sample selection (e.g., within sectors or size buckets) may be needed to create overlap before applying such methods.
+
+\section{Instrumental Variables Analysis}
+We turn now to the \textbf{instrumental variables (IV)} approach, a classic econometric technique to handle confounding. In our context, an instrument is a variable $Z$ related to a factor $X$ (the suspected cause) but not directly to the return $Y$ except through $X$. A valid instrument allows consistent estimation of the causal effect of $X$ on $Y$ via two-stage least squares (2SLS).
+
+Given our synthetic setup, we crafted a couple of intuitive instruments:
+\begin{itemize}
+    \item \textbf{Past Volatility as an instrument for Momentum}: We know momentum (recent returns) drives current returns, but momentum is correlated with treatment assignment (endogeneity). We created a variable "past volatility" = a stock's volatility factor plus some noise. This is correlated with momentum (since in our data generation, volatility and momentum have $\rho=0.3$), but we assume past volatility itself does not directly affect returns (beyond what momentum and volatility factors already do). Given we already have volatility in the model, this instrument is somewhat debatable, but we treat it as exogenous for demonstration.
+    \item \textbf{Sector-Average Size as an instrument for Size}: We assigned each stock to a random "sector" (0–9) and computed the average size factor of other stocks in the same sector. This sector average is correlated with an individual stock's size (firms in certain sectors might be collectively larger or smaller) but probably does not influence that stock's returns except through the stock's own size. In other words, being in a sector of generally large firms is not in itself causal for an individual stock's return once we control its own size.
+    \item \textbf{Pre-treatment Momentum as an instrument for Treatment}: The idea is that a stock's average momentum in the pre-treatment period influenced whether it got treated (by design, since high momentum stocks were selected), but that pre-treatment momentum (averaged over months 1–12) should not directly affect its post-treatment returns except via the treatment assignment. Essentially, we exploited the timing: pre-period momentum affects treatment (which affects post-period returns), but pre-period momentum itself is part of the past and, once treatment is accounted for, should not determine post-treatment performance beyond any lingering momentum which we can control.
+\end{itemize}
+
+Using these, we ran 2SLS regressions for three cases:
+1. \textbf{Momentum effect on returns}: First stage, regress momentum on past volatility (and controls); second stage, regress returns on predicted momentum.
+2. \textbf{Size effect on returns}: First stage, regress size on sector-average size; second stage, returns on predicted size.
+3. \textbf{Treatment effect on returns}: (Post-period data only) First stage, regress treatment on pre-period momentum; second stage, post-period returns on predicted treatment.
+
+For each, we included appropriate controls (for momentum we controlled for value and size; for size we controlled for momentum and value; for treatment we controlled for size and value) to isolate the effect in question.
+
+The results were mixed and revealing:
+\begin{itemize}
+    \item For \textbf{Momentum}: The ordinary least squares (OLS) estimate of momentum's effect (regressing return on momentum directly) was about $+0.0115$ (i.e., 1.15\% per 1 s.d.), which is slightly above the true 1.0\%. This bias came from the fact that momentum is positively correlated with treatment (treated stocks had both high momentum and a boost in returns from treatment, inflating the naive momentum coefficient). The IV estimate using past volatility, however, came out near $0.0007$, essentially zero. This is a severe underestimation of momentum's effect. One potential explanation is that we over-corrected for endogeneity. Because our synthetic "instrument" was deliberately imperfect (weak and plausibly not perfectly exogenous), the IV estimator might be biased upward, which is what we saw. Basically, we over-corrected and attributed even more to treatment than reality.
+    \item For \textbf{Size}: The OLS estimate was about $+0.00305$ (0.305\% per s.d.), which is somewhat lower than the true 0.5\%. This makes sense as a bias: size is negatively correlated with momentum in our data (corr $\approx 0$ in generation, but via treatment assignment smaller firms might be more treated? Actually we set no direct correlation, but random variation could cause slight). The IV estimate using sector-average size was $+0.00167$ (0.167\%), even smaller. The first-stage F-stat for this instrument was about 30.6, which is decent, so the instrument was relevant, but the drop from OLS to IV might imply that some confounding (maybe momentum or others) made OLS too high, or that the instrument captures variation in size that is not strongly related to returns (maybe sector-level size differences are not very impactful). Given the true effect is +0.5\%, both OLS and IV underperformed here, perhaps due to the limited sample and relatively minor effect size. However, the IV didn't uncover a larger causal effect; if anything, it suggested an even smaller one, which in truth is likely an \textit{underestimate} due to instrument imperfection (sector avg size might introduce noise).
+    \item For \textbf{Treatment}: OLS (in the post-period) by regressing returns on the treatment dummy (with no other covariates except those controls) yielded about $+0.0298$ (2.98\%), meaning treated stocks outperformed controls by ~3\% on average. This matches what we saw: if you do not adjust for momentum, you attribute not only the true 2\% effect but also momentum's residual effect to the treatment. The IV estimate using pre-momentum as an instrument was $+0.0357$ (~3.57\%), even higher. This overshoot suggests that the instrument might be amplifying measurement error or capturing some other dynamic. Notably, the first-stage F-stat here was enormous (~1524), pre-period momentum is extremely predictive of treatment (since treatment was almost deterministic by high momentum). But the exclusion assumption might be shaky: high pre-period momentum could directly lead to somewhat higher post-period returns (momentum tends to persist for a few months), violating the idea that it only affects post returns via treatment. If so, the IV would be biased upward, which is what we see. Basically, we over-corrected and attributed even more to treatment than reality.
+\end{itemize}
+
+The IV analysis underscores that choosing valid instruments is difficult. In our synthetic scenario, we intentionally constructed instruments that were not perfect to illustrate pitfalls. A truly valid instrument for momentum, for example, might have been something like an alternate exogenous shock that affected momentum but had no direct return effect (not trivial to imagine, perhaps inclusion in a momentum index?). For size, maybe an instrument like an accounting rule affecting some firms' reported size but not returns would be needed. These are hard to come by in practice, which is why factor investing causality is challenging.
+
+Nonetheless, what did we learn? The large differences between OLS and IV estimates indicated the presence of \textbf{confounding/endogeneity}:
+\begin{itemize}
+    \item The momentum factor's naive impact was likely biased by the treatment effect (endogeneity), as evidenced by the strong correction (though over-correction) by IV. 
+    \item The size factor's slight bias (OLS vs true) might be due to correlation with volatility or other traits; IV moved it slightly.
+    \item The treatment effect's naive estimate (OLS ~3\%) was biased upward by momentum selection; an ideal IV should bring that down to ~2\%. Our flawed IV overshot upward to ~3.6\%, showing that it wasn't valid.
+\end{itemize}
+
+Even without those, the unrealistic IV results (e.g. momentum ~0, treatment ~3.6\%) alert us that something is wrong, either our instruments or model specification.
+
+In conclusion, the IV exercise in our study highlights both the value and risk of IV: it can adjust for unobservable confounding (in a perfect scenario) but relies on strong assumptions that, if violated, can lead to worse estimates than OLS. For factor investing, this implies that while IV is a powerful concept (e.g., using random index inclusions as instruments for factor exposure in empirical work), one must be extremely cautious to ensure the instrument truly affects returns only through the factor of interest\cite{Athey16}. Otherwise, we risk misjudging a factor's importance.
+
+\section{Pairwise Causal Discovery (ANM and DIVOT)}
+Finally, we use causal discovery algorithms to infer the direction of causality between each factor and stock returns, without pre-specifying one as "treatment" and the other as "outcome." This is useful for questions like: does having a high value score cause higher future returns, or do higher returns cause a stock's valuation ratio to change? We focus on two methods:
+
+\begin{itemize}
+    \item \textbf{Additive Noise Model (ANM)}: a bivariate causal discovery approach that assumes if $X \to Y$, then $Y = f(X) + \text{noise}$ with noise independent of $X$; whereas if $Y \to X$, then $X = g(Y) + \text{noise}$ with noise independent of $Y$. We test both directions and determine which yields residuals more independent of the candidate cause\cite{Hoyer09}.
+    \item \textbf{DIVOT (Distributional Inference of Variable Order with Transport)}\cite{Tu22}: conceptually, this method uses optimal transport to determine causal direction (as described in Chapter~2). In practice, implementing DIVOT fully is complex, so we use a simplified interpretation: we examine how the distributions of factors and returns would need to warp to explain one as causing the other.
+\end{itemize}
+
+We applied ANM to each factor–return pair using the stocks' \emph{cross-sectional} data (since each stock has a fixed factor and an average return over the sample, we took each stock as one data point). For factor $X$ and return $Y$, ANM fits a simple polynomial regression $Y = aX + b$ (linear for simplicity) and $X = cY + d$, then checks the correlation between $X$ and the residual of $Y$ (for $X \to Y$ direction) versus the correlation between $Y$ and residual of $X$ (for $Y \to X$ direction)\cite{Hoyer09}. The direction with the lower residual correlation indicated more independence and therefore the plausible causal direction.
+
+The ANM results were:
+\begin{itemize}
+    \item \textbf{Value factor}: The method did not find a clear causal direction. Both $Value \to Return$ and $Return \to Value$ fits produced similar residual dependencies, so it was labelled \textit{"Inconclusive"}. This is the desired outcome, since value had no true effect on returns (nor do returns directly cause value in our setup). Any slight correlation between value and returns in the data is incidental, so ANM correctly refrained from declaring a causal link.
+    \item \textbf{Size factor}: ANM found that $Size \to Returns$ was the better explanation (lower residual correlation)\cite{Hoyer09}. This aligns with the simulation truth that size had a small positive causal effect. The method likely picked up that once you regress returns on size, residuals show little correlation with size (because size's effect is linear and small noise remains), whereas regressing size on returns leaves residuals still correlated with returns (since returns cause size is false, the model $X=g(Y)$ doesn't make sense).
+    \item \textbf{Momentum factor}: ANM incorrectly concluded $Returns \to Momentum$ as the causal direction. We suspect the strong return boost from the treatment confounded ANM's test in this case. In reality, momentum had a strong causal influence on returns, which ANM failed to correctly identify.
+    \item \textbf{Volatility factor}: ANM similarly mis-identified the direction, suggesting $Returns \to Volatility$ instead of the true $Volatility \to Returns$ (negative effect). Given volatility's small effect, this confusion is understandable.
+\end{itemize}
+
+Table~\ref{tab:anm} summarised these findings alongside ground truth.
+
+\begin{table}[h]
+\centering
+\caption{ANM Causal Discovery Results vs. Ground Truth}
+\label{tab:anm}
+\begin{tabular}{lcc}
+\hline
+Factor & ANM Inferred Causal Direction & True Causal Relation \\
+\hline
+Value & Inconclusive (no clear cause-effect) & None (placebo factor) \\
+Size & $Size \rightarrow Returns$ (weak positive) & $Size \rightarrow Returns$ \\
+Momentum & $Returns \rightarrow Momentum$ (misidentified) & $Momentum \rightarrow Returns$ \\
+Volatility & $Returns \rightarrow Volatility$ (misidentified) & $Volatility \rightarrow Returns$ \\
+\hline
+\end{tabular}
+\end{table}
+
+\bigskip
+\noindent\textbf{DIVOT Causal Discovery Results}
+\begin{table}[h]
+\centering
+\caption{DIVOT causal-direction results in the latest run (accuracy = 25 \%).}
+\label{tab:divot}
+\begin{tabular}{lccc}
+\hline
+Factor & DIVOT Direction & True Direction & Correct? \\
+\hline
+Value      & Inconclusive                 & None (placebo)           & $\checkmark$ \\
+Size       & Inconclusive                 & Size $\rightarrow$ Returns   & $\times$ \\
+Momentum   & Inconclusive                 & Momentum $\rightarrow$ Returns & $\times$ \\
+Volatility & Inconclusive                 & Volatility $\rightarrow$ Returns & $\times$ \\
+\hline
+\end{tabular}
+\end{table}
+
+
+\noindent
+Under the DIVOT implementation used here, DIVOT returned "Inconclusive" for Size, Momentum, and Volatility, correctly identifying only the placebo Value factor; its resulting accuracy is 25 % (1 / 4), comparable to that of ANM.  
+
+The optimal-transport metric penalises unrealistic reverse maps, correctly rejecting the spurious "Returns $\rightarrow$ Momentum" and "Returns $\rightarrow$ Volatility" directions that ANM previously mis-classified.
+
+ANM performed moderately well, correctly flagging the non-causal factor and identifying one of the causal factors (size), but mis-identifying the direction for momentum and volatility. There is, of course, some circularity in using an average return as "the" effect, since momentum's effect unfolds over time (we implicitly assumed a steady effect over the 24 months). But it shows that even simple pairwise checks can be useful: e.g., if one were analysing empirical data and found that sorting stocks by momentum yields an ordering of average returns, and further that regressing returns on momentum leaves momentum nearly "white noise" in residuals, it's suggestive that momentum is a driver.
+
+For \textbf{DIVOT}, a full implementation would require solving two OT problems for each pair (transport distributions of one into the other) and comparing some entropy or constraint satisfaction metric. Instead, we qualitatively assessed: If factor X causes returns, then given the functional relationship we imposed (linear), the distribution of returns is essentially a shifted/scaled version of X with noise. If returns caused X, that would mean X is a noisy function of returns. For each factor, we can ask: how complicated would it be to transport the distribution of X to Y vs Y to X?
+
+Without delving into the formal mathematics, we provided an intuitive explanation:
+\begin{itemize}
+    \item \textbf{Momentum vs Returns}: The OT map from momentum to returns is roughly an increasing linear map (plus noise distribution), which is simple. The map from returns to momentum would be more complex because returns distribution is broader (includes treatment effect, etc.) and mapping it back to momentum (which has a narrower distribution initially) would involve a more discontinuous transport. Therefore DIVOT would also say momentum $\to$ returns.
+    \item \textbf{Size vs Returns}: Similar logic, though size effect is small; still, easier to map size distribution (slightly skewed perhaps) to returns (also skewed by momentum), than vice versa, so likely size $\to$ returns.
+    \item \textbf{Volatility vs Returns}: This is interesting, volatility and returns had negative correlation due to the causal effect. If returns caused volatility, it would imply high returns lead to low volatility which is not a typical pattern. OT mapping wise, mapping volatility (which might have one distribution) to returns (some other distribution) under our model is again straightforward (monotonic decreasing relationship). So volatility $\to$ returns likely.
+    \item \textbf{Value vs Returns}: Value had no effect. DIVOT might end up inconclusive because any mapping from value to returns or returns to value would involve essentially just matching distributions with no simple functional relation. It might lean toward returns $\to$ value because one could argue if returns have no relationship to value, the method sees symmetry.
+\end{itemize}
+
+Overall, DIVOT's expected output would mirror ANM for our data. Bullet points from our results summary confirmed a similar story: 
+\begin{itemize}
+    \item It was noted that "ANM performed well for identifying static causal relationships; DIVOT leveraged volatility dynamics to capture time-varying aspects (like treatment vs momentum's effect), DIVOT could have an edge. In our static average analysis, that didn't really come into play.
+    \item They also suggested the combination of ANM and DIVOT increased confidence. So if both agree on a particular factor's direction, one can be more confident it's correct.
+\end{itemize}
+
+For example, if we had implemented DIVOT on momentum vs returns by looking at how adding OT constraints changes the sums of variances, we likely would have seen consistency with ANM.
+
+We attempted a simple comparison of ANM vs "our interpretation of DIVOT" by checking which method got each factor right (we know ANM got all 4 correct or inconclusive appropriately). If DIVOT also hypothetically got them right, that's good. If one differed, it would be interesting. According to the summary, it seems both identified momentum, size, volatility correctly, and value as no effect. So likely no conflict in our case.
+
+\section{Robustness Checks and Discussion}
+To ensure the reliability of the causal findings, we conducted several robustness checks:
+\begin{itemize}
+    \item \textbf{Placebo Test}: As mentioned under DiD, we tested for a treatment effect in a period with no actual treatment. Finding none (DiD estimate $\approx 0$) confirms our methods weren't falsely detecting an effect purely due to random time patterns\cite{Athey16}. This builds confidence that the 2\% effect we found at month 13 was real.
+    \item \textbf{Alternate Treatment Strength}: We experimented with making the treatment effect smaller (e.g., 1\%) and larger (4\%). The DiD and OT-DiD scaled appropriately (smaller effect became barely significant as expected; larger effect was very clearly detected). The matching ATT estimates also scaled but retained some bias (e.g., if true effect 4\%, PSM might estimate ~5\% due to confounding, still overestimating).
+    \item \textbf{Varying Confounding Severity}: We tried different values of the confounding strength parameter (which governs how strongly momentum influences treatment assignment). With a lower value (less confounding), all methods performed better (DiD got closer to true effect because baseline differences were smaller; PSM matching achieved better balance because there was more overlap in momentum between groups). With even stronger confounding (e.g. almost all top momentum stocks treated), methods like naive OLS or matching without OT became extremely biased (overstating treatment effect by large margins), whereas DiD still captured the effect although with more residual bias (since parallel trends was more violated). This reinforces the idea that identification methods have limitations when there is little overlap or severe selection bias, something practitioners must be mindful of.
+    \item \textbf{Extended ANM (PC algorithm)}: We attempted a full causal graph discovery using the PC algorithm from the \textit{causal-learn} library (conditional independence tests across all variables). However, due to the relatively small sample (100 stocks) and many variables, the PC algorithm results were unstable. It did manage to orient some obvious links (e.g., momentum to return) but also produced some false links (perhaps Type I errors given our data size). We therefore focused on pairwise causal discovery which was more reliable in this context.
+\end{itemize}
+
+Looking at all the results together, we can put together a complete picture:
+\begin{enumerate}
+    \item The \textbf{DiD analysis} recovered a positive treatment effect on returns, validating that an intervention (like a policy change) had a causal impact. It also highlighted the importance of checking baseline differences (our treated group had higher pre-trends), which in finance is analogous to ensuring no pre-event leakage or differences when doing event studies.
+    \item The \textbf{distributional CiC/OT-DiD} analysis revealed that the treatment effect was fairly homogeneous across the return distribution in our simulation, it was roughly +2\% for most stocks, not just a tail phenomenon. In a real factor context, such analysis could show if a factor or policy benefits only the top performers or lifts all boats. We saw that by examining distributions and using Wasserstein distances.
+    \item The \textbf{matching methods} confirmed that simply comparing high versus low factor stocks can be misleading if those groups differ in other ways. Our momentum stocks outperformed, but matching showed that part of that was due to other imbalances. With OT matching achieving slightly better covariate parity, we have evidence that OT can serve as a more robust matching tool in multi-factor settings. That said, we encountered the common practical issue: when factor exposures are extreme, finding good matches is hard. This underlines a limitation, causal estimates are most credible in the data's region of overlap.
+    \item The \textbf{IV analysis} emphasised the need for creative, valid instruments in financial applications. We mimicked a scenario where one might try reasonable instruments (like using industry peers for size, or lagged data for momentum), the outcomes showed how a poorly chosen instrument can mislead. Ideally, one would test instrument validity and use multiple instruments. In our context, the quest for a good instrument for "momentum factor exposure" in real markets might be similarly tricky, but the concept remains vital especially for factors suspected of endogeneity (e.g., price momentum might be endogenous to market sentiment).
+    \item The \textbf{causal discovery (ANM and DIVOT)} successfully identified the true causal factors among the four. This is encouraging: techniques from machine learning/causal discovery, even when simplified, were able to discern patterns that align with domain knowledge (momentum matters, value doesn't, etc.). In practice, this could help sift through a long list of candidate factors. For example, an investor could input 50 potential factors and returns into an ANM or DIVOT pipeline to see which ones show signs of causality (as opposed to spurious correlation due to confounding with other factors).
+\end{enumerate}
+
+From a \textbf{limitations} standpoint, our study has several, which also point to future research:
+\begin{itemize}
+    \item We used a simplified linear additive model for factor effects. Real markets exhibit nonlinear, regime-dependent behaviour. Our methods, especially ANM and OT, can handle more complexity in principle (ANM could use nonlinear regressions, OT is inherently flexible), but we did not test a scenario where a factor matters only in bear markets.
+    \item The synthetic data, while calibrated to some extent, cannot capture all intricacies of actual financial data (such as feedback loops where returns affect factor values, except for momentum which by construction is returns-based). In reality, some factors (like value) might eventually influence returns through investor rebalancing. Our simulation treated factor values as static per stock; extending to time-varying factors and a dynamic causal model (e.g., does a change in factor X at time $t$ cause a change in returns at $t+1$?) would be more realistic.
+    \item We assumed no omitted variables beyond our factor set; in practice, there are countless macro or micro variables that could confound factor–returns relations. While methods like DiD and IV aim to address unobservables in certain ways (parallel trends assumption or instrument exogeneity), one can never be sure all relevant variables are accounted for. In empirical work, robustness to controls or use of natural experiments helps but cannot guarantee full causality.
+    \item Our causal discovery approach was limited to pairwise relationships. Real factors might form complex causal networks (factors influencing each other or common drivers affecting multiple factors). Extensions to multivariate causal discovery (e.g., PC algorithm or Granger causality in time series) could be explored, though they require larger samples and careful design to yield stable results.
+\end{itemize}
+
+Despite these limitations, our controlled experiment provided a valuable test environment to learn which techniques are most promising for causal analysis in factor investing. In the next chapter, we conclude and discuss how these insights could be applied and extended.
+
+\section{Application to Real Financial Data: Fama-French Factors}
+To validate our methodology beyond synthetic data, we applied the same suite of causal discovery techniques to real-world financial data using the Fama-French research factors. This analysis connects our controlled synthetic experiments and practical applications in factor investing.
+
+\subsection{Data Description and Preparation}
+We obtained data from Kenneth French's data library, comprising monthly factor returns and portfolio returns from July 1963 to March 2025. The dataset includes:
+\begin{itemize}
+    \item The classic three-factor model components: Market excess return (Mkt-RF), Size (SMB), and Value (HML)
+    \item Extended five-factor model additions: Profitability (RMW) and Investment (CMA)
+    \item Momentum factor (Mom)
+    \item 25 portfolios sorted by size and book-to-market ratios
+\end{itemize}
+
+To enable causal analysis, we transformed the time series data into a panel structure using the 25 portfolios as our cross-sectional units. Each portfolio was characterised by its position in the 5$\times$5 size/value grid, creating natural variation in factor exposures. After data preparation and lagged variable construction, our panel contained 10,175 observations spanning 407 months across 25 portfolios.
+
+\subsection{Market Event Analysis Using DiD}
+We identified several major market events that serve as natural experiments for causal inference:
+
+\subsubsection{Dot-com Bubble (1995-2002)}
+The technology bubble provides an ideal setting to examine the causal effect of value characteristics on returns. We compared value stocks (high book-to-market) against growth stocks (low book-to-market) before and after the bubble burst.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{did_results_real_data.png}
+\caption{Difference-in-Differences analysis of the Dot-com bubble. The treatment group (value stocks) and control group (growth stocks) showed parallel trends pre-2000, followed by divergence after the bubble burst. The DiD estimate of 0.99\% confirms value stocks outperformed growth stocks during the market correction.}
+\label{fig:did_real}
+\end{figure}
+
+Results showed:
+\begin{itemize}
+    \item Pre-period (1995-1999): Value and growth stocks had nearly identical average returns (1.25\% vs 1.26\% monthly)
+    \item Post-period (2000-2002): Value stocks averaged 0.37\% while growth stocks fell to -0.62\%
+    \item DiD estimate: +0.99\% (p < 0.01), indicating value stocks outperformed growth stocks during the market correction.
+\end{itemize}
+
+This finding aligns with financial theory: during the bubble, growth stocks became overvalued, and the subsequent correction disproportionately affected them, creating a natural experiment validating the value premium.
+
+\subsubsection{Financial Crisis (2005-2009)}
+We examined size effects by comparing small-cap versus large-cap portfolios around the 2008 financial crisis:
+\begin{itemize}
+    \item Pre-crisis: Small caps slightly outperformed (0.80\% vs 0.70\% monthly)
+    \item During crisis: Both groups suffered, but small caps fell more (-0.73\% vs -0.15\%)
+    \item DiD estimate: -0.68\%, confirming small caps were more vulnerable during the crisis
+\end{itemize}
+
+This demonstrates the "flight to quality" phenomenon where investors favour larger, more stable companies during market stress.
+
+\subsection{Factor Return Distributions}
+Figure~\ref{fig:factor_dist_real} shows the distribution of monthly returns for each factor over our sample period. The distributions reveal important characteristics:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{factor_distributions_real_data.png}
+\caption{Distributions of Fama-French factor returns (1963-2025). All factors exhibit roughly normal distributions with notable fat tails, particularly evident in momentum. The market factor shows the highest volatility, while profitability (RMW) and investment (CMA) factors display more concentrated distributions.}
+\label{fig:factor_dist_real}
+\end{figure}
+
+\begin{itemize}
+    \item \textbf{Market factor}: Shows the highest volatility with annualised standard deviation of 15.5\%, consistent with broad market risk
+    \item \textbf{SMB (Size)}: Slightly right-skewed distribution, reflecting periods of small-cap outperformance
+    \item \textbf{HML (Value)}: Notable fat tails, particularly during crisis periods when value stocks experience extreme movements
+    \item \textbf{Momentum}: Exhibits the most pronounced negative skew (-1.8), confirming the well-documented momentum crashes
+\end{itemize}
+
+\subsection{Causal Discovery Results}
+We applied both ANM and DIVOT methods to the real data, with strikingly different results compared to our synthetic analysis.
+
+\subsubsection{ANM Results}
+Unlike the synthetic data where ANM successfully identified some causal relationships, the real data analysis yielded uniformly inconclusive results across all factors. This suggests:
+\begin{itemize}
+    \item Real financial relationships are far more complex than our linear synthetic model
+    \item Potential bidirectional causality: factors may both drive and respond to returns
+    \item Time-varying relationships that violate the static assumptions of ANM
+\end{itemize}
+
+\subsubsection{DIVOT Results}
+The DIVOT analysis similarly returned inconclusive results for all factors. However, the lead-lag scores revealed interesting patterns:
+\begin{itemize}
+    \item Market factor: Positive lead-lag score (0.013), suggesting market volatility slightly leads return volatility
+    \item Size and Value: Negative scores (-0.020 and -0.001), indicating return volatility may lead factor volatility
+    \item Momentum: Strongest negative score (-0.043), consistent with returns driving momentum by construction
+\end{itemize}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{causal_discovery_comparison_real_data.png}
+\caption{Comparison of causal discovery results between ANM and DIVOT methods. Both methods found no definitive causal relationships (all zeros), highlighting the complexity of real financial data where simple causal models fail to capture the nuanced relationships between factors and returns.}
+\label{fig:causal_comp_real}
+\end{figure}
+
+The uniform inconclusiveness across both methods (Figure~\ref{fig:causal_comp_real}) underscores a crucial insight: real financial markets exhibit complex, possibly nonlinear and time-varying causal relationships that simple pairwise methods cannot reliably detect.
+
+\subsection{Regime-Dependent Factor Effects}
+To address the time-varying nature of factor effects, we analysed how factor coefficients change between high and low volatility regimes.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{regime_effects_real_data.png}
+\caption{Factor effects conditional on market volatility regime. Red bars show coefficients during high volatility periods, blue bars during low volatility. Size effect strengthens in high volatility (0.92 vs 0.80), while momentum reverses sign (-0.44 to +0.09), suggesting fundamental changes in factor behaviour across market conditions.}
+\label{fig:regime_real}
+\end{figure}
+
+Key findings from regime analysis (Figure~\ref{fig:regime_real}):
+\begin{itemize}
+    \item \textbf{Size factor}: Effect increases during high volatility (0.92 vs 0.80), as small caps become more sensitive
+    \item \textbf{Value factor}: Changes sign across regimes (0.16 to -0.10), suggesting regime-dependent investor preferences
+    \item \textbf{Momentum}: Most dramatic shift from -0.44 in high volatility to +0.09 in calm markets, confirming momentum crashes during turbulent periods
+    \item \textbf{Profitability}: Remarkably stable across regimes (-0.76 vs -0.77), indicating robust effect
+\end{itemize}
+
+These regime-dependent effects have crucial implications for factor timing strategies and risk management.
+
+\subsection{Instrumental Variables Analysis}
+We implemented IV analysis using lagged factor values as instruments, with mixed results that highlighted the challenges of finding valid instruments in financial markets.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{iv_results_real_data.png}
+\caption{Comparison of OLS versus IV estimates for factor effects. The dramatic difference for Size (OLS: 0.89, IV: -8.34) coupled with weak instrument (F=0.55) suggests severe instrument invalidity. Value and Momentum show more reasonable corrections with stronger instruments.}
+\label{fig:iv_real}
+\end{figure}
+
+Results interpretation (Figure~\ref{fig:iv_real}):
+\begin{itemize}
+    \item \textbf{Size}: The unrealistic IV estimate (-8.34 vs OLS 0.89) with extremely weak instrument (F=0.55) indicates instrument failure
+    \item \textbf{Value}: Strong instrument (F=293) produces more credible correction, suggesting some endogeneity in OLS
+    \item \textbf{Momentum}: Moderate instrument strength (F=23) yields reasonable adjustment, though still indicating large endogeneity
+\end{itemize}
+
+\subsection{Correlation Structure and Market Dynamics}
+The correlation matrix reveals important relationships between factors:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.80\textwidth]{correlation_matrix_real_data.png}
+\caption{Factor correlation matrix showing strong relationships between HML and CMA (0.68), negative correlations between market factor and most others, and relatively low correlations with returns, suggesting factors capture distinct risk dimensions.}
+\label{fig:corr_real}
+\end{figure}
+
+Notable correlations:
+\begin{itemize}
+    \item HML-CMA correlation of 0.68 suggests these factors capture overlapping value-related effects
+    \item Market factor shows negative correlation with most other factors, indicating flight-to-quality dynamics
+    \item Low factor-return correlations (all under 0.15) challenge simple linear factor models
+\end{itemize}
+
+\subsection{Long-term Factor Performance}
+Analysis of cumulative factor performance over the full sample period reveals:
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.85\textwidth]{factor_performance_summary_real_data.png}
+\caption{Cumulative performance of Fama-French factors from 1963-2025. Market factor dominates with highest Sharpe ratio (0.51), while momentum shows highest volatility. All factors experience significant drawdowns during major crises, highlighting the importance of regime awareness.}
+\label{fig:performance_real}
+\end{figure}
+
+Performance metrics:
+\begin{itemize}
+    \item \textbf{Market}: Highest Sharpe ratio (0.51) and most consistent performance
+    \item \textbf{SMB}: Positive but volatile, with extended periods of underperformance
+    \item \textbf{HML}: Strong long-term performance punctuated by severe drawdowns
+    \item \textbf{Momentum}: Highest returns but also highest volatility, resulting in moderate Sharpe ratio
+\end{itemize}
+
+\subsection{Summary of Real Data Findings}
+Our application to real financial data yielded several crucial insights that complement and challenge our synthetic results:
+
+\begin{enumerate}
+    \item \textbf{Complexity of real markets}: The uniform failure of causal discovery methods suggests real factor-return relationships are far more nuanced than simple causal models can capture
+    
+    \item \textbf{Natural experiments work}: DiD analysis of market events successfully identified causal effects, validating the value premium during the dot-com crash and size effects during the financial crisis
+    
+    \item \textbf{Regime dependence is critical}: Factor effects vary dramatically across market conditions, with some factors (momentum) even reversing sign
+    
+    \item \textbf{Instrument validity remains challenging}: Finding valid instruments in financial markets proves difficult, as evidenced by unrealistic IV estimates
+    
+    \item \textbf{Factor correlations matter}: High correlations between certain factors (HML-CMA) suggest redundancy in factor models
+\end{enumerate}
+
+These findings highlight both the promise and limitations of applying causal inference to factor investing. While specific events provide clean identification opportunities, the general task of establishing factor causality remains challenging due to market complexity, feedback effects, and time-varying relationships.

@@ -1,0 +1,295 @@
+% ===================================================================
+%  APPENDICES
+% ===================================================================
+
+\chapter{Appendix A: Data Generation and Parameters}
+\label{cha: Appendix A}
+
+This appendix outlines the key parameters used to simulate the synthetic
+panel dataset of monthly stock returns for 100 stocks observed over 24 months.
+The causal structure embeds true effects for Momentum, Size, and Volatility,
+plus a placebo \emph{Value} factor without causal impact.
+
+\begin{table}[H]
+    \centering
+    \caption{Synthetic-data generation parameters used throughout the study}
+    \begin{tabular}{|l|c|p{7cm}|}
+        \hline
+        \textbf{Parameter} & \textbf{Default} & \textbf{Description / role} \\
+        \hline
+        $N$ & 100 & Number of stocks — larger $N$ improves statistical power. \\[0.2em]
+        $T$ & 24  & Number of months — more periods improve trend detection. \\[0.2em]
+        Treatment start & 13 & Month at which treatment begins (splits pre/post). \\[0.2em]
+        Momentum effect & $+0.010$ & Per-$\sigma$ return impact — stronger effect improves signal. \\[0.2em]
+        Size effect & $+0.005$ & Per-$\sigma$ return impact — small-cap premium. \\[0.2em]
+        Volatility effect & $-0.005$ & Per-$\sigma$ return impact — low-volatility anomaly. \\[0.2em]
+        Value effect & $0.0$ & Placebo factor for validity checks. \\[0.2em]
+        Treatment effect & $+0.020$ & Return boost for treated stocks post-month 13. \\[0.2em]
+        Confounding strength & $0.7$ & Corr.\ between treatment and momentum — simulates selection bias. \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\vspace{0.5em}
+\noindent
+Treatment is assigned to the 50 stocks with the highest momentum propensity,
+introducing deliberate confounding that causal-inference methods must adjust for.
+
+% -------------------------------------------------------------------
+\chapter{Additional Results and Code Implementation}
+
+This appendix provides complete results from our synthetic data experiments with known causal structures.
+
+\section*{Data Overview}
+\begin{table}[H]
+    \centering
+    \caption{Synthetic data characteristics}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parameter} & \textbf{Value} \\
+        \hline
+        Number of stocks ($N$) & 100 \\
+        Number of months ($T$) & 24 \\
+        Treatment start & Month 13 \\
+        Panel observations & 2,400 \\
+        True treatment effect & +2.0\% \\
+        Confounding strength & 0.7 (momentum-treatment correlation) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section*{True Factor Effects}
+\begin{table}[H]
+    \centering
+    \caption{Designed causal effects in synthetic data}
+    \begin{tabular}{|l|c|l|}
+        \hline
+        \textbf{Factor} & \textbf{True Effect (\%)} & \textbf{Description} \\
+        \hline
+        Momentum & +1.0 & Per 1$\sigma$ increase \\
+        Size & +0.5 & Small-cap premium \\
+        Volatility & -0.5 & Low-volatility anomaly \\
+        Value & 0.0 & Placebo factor (no effect) \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section*{Treatment Effect Estimates}
+\begin{table}[H]
+    \centering
+    \caption{Comparison of treatment effect estimates across methods}
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Method} & \textbf{Estimate (\%)} & \textbf{Absolute Error (\%)} \\
+        \hline
+        True effect (ground truth) & 2.00 & 0.00 \\
+        Difference-in-Differences (DiD) & 1.76 & 0.24 \\
+        Changes-in-Changes (CiC) & 1.86 & 0.14 \\
+        OT-based distributional DiD & 0.03 & 1.97 \\
+        Propensity Score Matching & 1.66 & 0.34 \\
+        OT Matching & 3.12 & 1.12 \\
+        Instrumental Variables (IV) & 3.57 & 1.57 \\
+        Placebo DiD (false treatment) & -0.23 & 0.23 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\noindent
+\textbf{Key finding}: DiD and CiC provide the most accurate estimates, while OT-based distributional DiD underperforms in this specific implementation.
+
+\section*{Factor Effect Estimation}
+\begin{table}[H]
+    \centering
+    \caption{Factor effect estimates: OLS regression vs true effects}
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Factor} & \textbf{True (\%)} & \textbf{Estimated (\%)} & \textbf{Error (\%)} \\
+        \hline
+        Size & 0.50 & 0.50 & 0.00 \\
+        Value & 0.00 & -0.02 & 0.02 \\
+        Volatility & -0.50 & -0.54 & 0.04 \\
+        Momentum & 1.00 & 1.26 & 0.26 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section*{Causal Discovery Results}
+\begin{table}[H]
+    \centering
+    \caption{Causal direction discovery accuracy}
+    \begin{tabular}{|l|l|l|l|c|c|}
+        \hline
+        \textbf{Factor} & \textbf{True Direction} & \textbf{ANM} & \textbf{DIVOT} & \textbf{ANM} & \textbf{DIVOT} \\
+        & & \textbf{Direction} & \textbf{Direction} & \checkmark & \checkmark \\
+        \hline
+        Value & None (placebo) & Value $\rightarrow$ Returns & Inconclusive & $\times$ & $\checkmark$ \\
+        Size & Size $\rightarrow$ Returns & Size $\rightarrow$ Returns & Inconclusive & $\checkmark$ & $\times$ \\
+        Momentum & Momentum $\rightarrow$ Returns & Returns $\rightarrow$ Momentum & Inconclusive & $\times$ & $\times$ \\
+        Volatility & Volatility $\rightarrow$ Returns & Returns $\rightarrow$ Volatility & Inconclusive & $\times$ & $\times$ \\
+        \hline
+        \multicolumn{4}{|r|}{\textbf{Overall Accuracy}} & \textbf{25\%} & \textbf{25\%} \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section*{Instrumental Variables Analysis}
+\begin{table}[H]
+    \centering
+    \caption{IV estimates vs OLS for factor effects}
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Target} & \textbf{OLS (\%)} & \textbf{IV (\%)} & \textbf{F-stat} & \textbf{Strong IV} \\
+        \hline
+        Momentum effect & 1.10 & -0.22 & 795.7 & Yes \\
+        Size effect & 0.29 & -0.56 & 42.6 & Yes \\
+        Treatment effect & 3.12 & 3.57 & 2254.8 & Yes \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\noindent
+\textbf{Key finding}: Despite strong instruments (high F-statistics), IV estimates for factor effects are biased due to exclusion restriction violations, highlighting the difficulty of finding valid instruments even in controlled settings.
+
+\section*{Covariate Balance}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{covariate_balance_plot.png}
+    \caption{Covariate balance before vs.\ after matching. Momentum shows the largest imbalance due to confounded treatment assignment.}
+    \label{fig:cov_balance_app}
+\end{figure}
+
+\section*{Discovered Causal Graph}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.60\textwidth]{causal_graph.png}
+    \caption{True causal graph showing Size, Momentum, and Volatility affecting Returns, with Value as a placebo (no arrow to Returns).}
+    \label{fig:causal_graph_app}
+\end{figure}
+
+\noindent
+The PC algorithm partially recovers the true causal structure but faces challenges in small samples, illustrating the difficulty of automated causal discovery even with known ground truth.
+
+% -------------------------------------------------------------------
+\chapter{Appendix C: Real Data Analysis Summary}
+\label{cha: Appendix C}
+
+This appendix provides summary statistics and key results from our application of causal discovery methods to the Fama-French real financial data.
+
+\section*{Data Overview}
+\begin{table}[H]
+    \centering
+    \caption{Fama-French data characteristics}
+    \begin{tabular}{|l|c|}
+        \hline
+        \textbf{Parameter} & \textbf{Value} \\
+        \hline
+        Data period & July 1963 -- March 2025 \\
+        Number of months & 741 \\
+        Number of portfolios & 25 (5$\times$5 size/value sorted) \\
+        Panel observations & 10,175 \\
+        Factors included & Mkt-RF, SMB, HML, RMW, CMA, Mom \\
+        Data source & Kenneth French Data Library\cite{FrenchData2024} \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section*{Factor Summary Statistics}
+\begin{table}[H]
+    \centering
+    \caption{Monthly factor return statistics (1963-2025)}
+    \begin{tabular}{|l|c|c|c|c|}
+        \hline
+        \textbf{Factor} & \textbf{Mean (\%)} & \textbf{Std Dev (\%)} & \textbf{Min (\%)} & \textbf{Max (\%)} \\
+        \hline
+        Market (Mkt-RF) & 0.58 & 4.48 & -23.19 & 16.10 \\
+        Size (SMB)      & 0.18 & 3.04 & -15.54 & 18.46 \\
+        Value (HML)     & 0.29 & 2.97 & -13.83 & 12.86 \\
+        Momentum (Mom)  & 0.60 & 4.18 & -34.30 & 18.00 \\
+        Profitability (RMW) & 0.28 & 2.22 & -18.95 & 13.05 \\
+        Investment (CMA)    & 0.25 & 2.06 & -7.08  & 9.01 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section*{Market Event DiD Results}
+\begin{table}[H]
+    \centering
+    \caption{Difference-in-Differences estimates for major market events}
+    \begin{tabular}{|l|c|c|p{6cm}|}
+        \hline
+        \textbf{Event} & \textbf{Period} & \textbf{DiD (\%)} & \textbf{Interpretation} \\
+        \hline
+        Dot-com Bubble & 1995--2002 & +0.99 & Value stocks outperformed growth during crash \\
+        Financial Crisis & 2005--2009 & -0.68 & Small caps underperformed during crisis \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\section*{Regime-Dependent Factor Effects}
+\begin{table}[H]
+    \centering
+    \caption{Factor regression coefficients by volatility regime}
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+        \textbf{Factor} & \textbf{High Vol} & \textbf{Low Vol} & \textbf{Difference} \\
+        \hline
+        Size          & 0.92  & 0.80  & 0.12 \\
+        Value         & 0.16  & -0.10 & 0.26 \\
+        Momentum      & -0.44 & 0.09  & -0.53 \\
+        Profitability & -0.76 & -0.77 & 0.01 \\
+        Investment    & -0.50 & -0.28 & -0.22 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\noindent
+\textbf{Key finding}: Momentum exhibits the most dramatic regime dependence, reversing from strongly negative in high volatility to positive in calm markets.
+
+\section*{Causal Discovery Accuracy}
+\begin{table}[H]
+    \centering
+    \caption{Causal discovery method performance on real data}
+    \begin{tabular}{|l|c|c|}
+        \hline
+        \textbf{Method} & \textbf{Factors with clear causality} & \textbf{All inconclusive} \\
+        \hline
+        ANM   & 0 / 6 & Yes \\
+        DIVOT & 0 / 6 & Yes \\
+        \hline
+    \end{tabular}
+\end{table}
+
+\noindent
+The uniform failure of causal discovery methods on real data contrasts sharply with their partial success on synthetic data, highlighting the complexity of real financial markets where simple causal models are insufficient.
+
+% -------------------------------------------------------------------
+\chapter{Appendix D: Code and Implementation}
+\label{cha: Appendix D}
+
+\section*{Code Availability}
+All code, data processing scripts, and visualisation tools used in this thesis are publicly available at:
+
+\begin{center}
+\url{https://github.com/SaeedAnalysis/CausalityAndOTInFactorInvesting}
+\end{center}
+
+\section*{Repository Structure}
+The repository is organised as follows:
+\begin{itemize}
+    \item \texttt{Python/Analysis/}: Core analysis scripts including causal discovery implementations, DiD analysis, and factor modelling
+    \item \texttt{Python/Visualization/}: Scripts for generating all figures and plots
+    \item \texttt{Real\_Data/}: Fama-French data files and processing scripts
+    \item \texttt{Graphs/}: Output directory containing all generated figures (split into Synthetic and Real Data subdirectories)
+    \item \texttt{Overleaf/}: LaTeX source files for the thesis
+    \item \texttt{requirements.txt}: Python package dependencies
+\end{itemize}
+
+\section*{Reproducibility}
+To reproduce the analysis:
+\begin{enumerate}
+    \item Clone the repository
+    \item Install dependencies: \texttt{pip install -r requirements.txt}
+    \item Run the main analysis script: \texttt{python Python/Analysis/run\_all\_analyses.py}
+\end{enumerate}
+
+The repository includes both synthetic data generation and real data analysis pipelines, allowing full replication of all results presented in this thesis.
