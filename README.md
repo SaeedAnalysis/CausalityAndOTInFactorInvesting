@@ -1,8 +1,12 @@
 # Causal Discovery in Factor Investing with Optimal Transport
 
+*An academic thesis project by Saeed Ali Nasser Alameri - For academic and research purposes only*
+
 ## Overview
 
 This repository contains the code, data, and thesis materials for my Master's research project on applying causal discovery algorithms to factor investing, with a special focus on enhancements using optimal transport theory.
+
+**Note: This work is shared for academic review and research purposes. Commercial use is prohibited without permission.**
 
 ## Project Structure
 
@@ -129,7 +133,14 @@ Master's Thesis, Khalifa University.
 
 ## License
 
-This project is licensed under the MIT License - see LICENSE file for details.
+This project is licensed under the Creative Commons Attribution-NonCommercial 4.0 International License.
+
+**Academic Use Only**: This thesis and associated code are provided for academic and research purposes. Commercial use is prohibited without explicit permission from the author.
+
+- ✅ **Allowed**: Academic research, educational use, citation in papers
+- ❌ **Not Allowed**: Commercial applications, proprietary use without permission
+
+For full license details, see the LICENSE file or visit [CC BY-NC 4.0](http://creativecommons.org/licenses/by-nc/4.0/)
 
 ## Acknowledgments
 
