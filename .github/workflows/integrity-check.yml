@@ -1,0 +1,79 @@
+name: Academic Integrity Check
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  integrity-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v3
+      with:
+        python-version: 3.9
+    
+    - name: Install dependencies
+      run: |
+        cd Python
+        pip install -r ../requirements.txt
+    
+    - name: Check unauthorized literals
+      run: |
+        cd Python
+        python3 check_unauthorized_literals.py --all-files
+        if [ $? -ne 0 ]; then
+          echo "❌ Unauthorized literals found - stopping build"
+          exit 1
+        fi
+    
+    - name: Run integrity pipeline
+      run: |
+        cd Python
+        python3 comprehensive_integrity_pipeline.py --full-pipeline
+        if [ $? -ne 0 ]; then
+          echo "❌ Integrity violations found - stopping build"
+          exit 1
+        fi
+    
+    - name: Check best practices
+      run: |
+        cd Python
+        python3 check_best_practices.py --full-check
+        if [ $? -ne 0 ]; then
+          echo "❌ Best practices violations found - stopping build"
+          exit 1
+        fi
+    
+    - name: Verify metrics build
+      run: |
+        cd Python
+        python3 build_metrics.py --seed 42 --fail-fast
+        if [ $? -ne 0 ]; then
+          echo "❌ Metrics build failed - stopping build"
+          exit 1
+        fi
+    
+    - name: Setup LaTeX
+      if: success()
+      uses: xu-cheng/latex-action@v2
+      with:
+        root_file: Overleaf/Thesis.tex
+        working_directory: .
+        args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode
+    
+    - name: Upload LaTeX logs on failure
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: latex-logs
+        path: |
+          Overleaf/*.log
+          Python/NUMERIC_ISSUES.md
+          Python/HARD_CODE_VIOLATION.txt
+          Python/CODE_ISSUES.md 

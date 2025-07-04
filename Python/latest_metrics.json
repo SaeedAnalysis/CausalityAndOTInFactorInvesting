@@ -1,0 +1,317 @@
+{
+  "analysis_version": "optimized-v3.0",
+  "generated_timestamp": "2025-06-29T16:48:32.129037",
+  "global_alpha_level": 0.05,
+  "global_confidence_level": 0.95,
+  "global_seed": 42,
+  "global_tolerance": 1e-09,
+  "real_anm_0_Direction": "Market \u2192 Returns",
+  "real_anm_0_Factor": "Market",
+  "real_anm_0_Observations": 10175.0,
+  "real_anm_0_Score": 0.001,
+  "real_anm_1_Direction": "SMB \u2192 Returns",
+  "real_anm_1_Factor": "SMB",
+  "real_anm_1_Observations": 10175.0,
+  "real_anm_1_Score": 0.001,
+  "real_anm_2_Direction": "Returns \u2192 HML",
+  "real_anm_2_Factor": "HML",
+  "real_anm_2_Observations": 10175.0,
+  "real_anm_2_Score": 0.02541542658122338,
+  "real_anm_3_Direction": "Momentum \u2192 Returns",
+  "real_anm_3_Factor": "Momentum",
+  "real_anm_3_Observations": 10175.0,
+  "real_anm_3_Score": 0.001,
+  "real_anm_4_Direction": "Returns \u2192 RMW",
+  "real_anm_4_Factor": "RMW",
+  "real_anm_4_Observations": 10175.0,
+  "real_anm_4_Score": 0.017340237348527847,
+  "real_anm_5_Direction": "CMA \u2192 Returns",
+  "real_anm_5_Factor": "CMA",
+  "real_anm_5_Observations": 10175.0,
+  "real_anm_5_Score": 0.001,
+  "real_anm_factors_analyzed": 6,
+  "real_data_available": true,
+  "real_date_range_end": "10199",
+  "real_date_range_start": "25",
+  "real_did_dot_com_bubble_control_diff": -0.01873519111111111,
+  "real_did_dot_com_bubble_did_estimate": 0.009858090555555556,
+  "real_did_dot_com_bubble_did_pct": 0.9858090555555556,
+  "real_did_dot_com_bubble_event": "Dot-com Bubble",
+  "real_did_dot_com_bubble_ot_did_estimate": -0.016700841666666688,
+  "real_did_dot_com_bubble_ot_did_pct": -1.6700841666666688,
+  "real_did_dot_com_bubble_post_control": -0.006181383333333334,
+  "real_did_dot_com_bubble_post_treated": 0.0036701777777777772,
+  "real_did_dot_com_bubble_pre_control": 0.012553807777777778,
+  "real_did_dot_com_bubble_pre_treated": 0.012547278333333332,
+  "real_did_dot_com_bubble_treated_diff": -0.008877100555555555,
+  "real_did_financial_crisis_control_diff": -0.008527697222222224,
+  "real_did_financial_crisis_did_estimate": -0.006794961944444448,
+  "real_did_financial_crisis_did_pct": -0.6794961944444449,
+  "real_did_financial_crisis_event": "Financial Crisis",
+  "real_did_financial_crisis_ot_did_estimate": -0.00694209583333328,
+  "real_did_financial_crisis_ot_did_pct": -0.6942095833333279,
+  "real_did_financial_crisis_post_control": -0.0014826638888888904,
+  "real_did_financial_crisis_post_treated": -0.00727472916666667,
+  "real_did_financial_crisis_pre_control": 0.007045033333333333,
+  "real_did_financial_crisis_pre_treated": 0.008047930000000002,
+  "real_did_financial_crisis_treated_diff": -0.015322659166666672,
+  "real_divot_0_Direction": "Market \u2192 Returns",
+  "real_divot_0_Factor": "Market",
+  "real_divot_0_Lead-Lag Score": 0.01250875787851996,
+  "real_divot_0_OT Score": -3.469446951953614e-18,
+  "real_divot_0_Score": 0.012508757878519959,
+  "real_divot_1_Direction": "Returns \u2192 SMB",
+  "real_divot_1_Factor": "SMB",
+  "real_divot_1_Lead-Lag Score": -0.01958885095589033,
+  "real_divot_1_OT Score": -6.938893903907228e-18,
+  "real_divot_1_Score": 0.019588850955890334,
+  "real_divot_2_Direction": "Returns \u2192 HML",
+  "real_divot_2_Factor": "HML",
+  "real_divot_2_Lead-Lag Score": -0.001161590711361099,
+  "real_divot_2_OT Score": -6.938893903907228e-18,
+  "real_divot_2_Score": 0.0011615907113611012,
+  "real_divot_3_Direction": "Returns \u2192 Momentum",
+  "real_divot_3_Factor": "Momentum",
+  "real_divot_3_Lead-Lag Score": -0.04303348107809754,
+  "real_divot_3_OT Score": 0.0,
+  "real_divot_3_Score": 0.04303348107809754,
+  "real_divot_4_Direction": "Returns \u2192 RMW",
+  "real_divot_4_Factor": "RMW",
+  "real_divot_4_Lead-Lag Score": -0.005261211221172443,
+  "real_divot_4_OT Score": 0.0,
+  "real_divot_4_Score": 0.005261211221172443,
+  "real_divot_5_Direction": "Returns \u2192 CMA",
+  "real_divot_5_Factor": "CMA",
+  "real_divot_5_Lead-Lag Score": -0.00590350086769148,
+  "real_divot_5_OT Score": 1.3877787807814457e-17,
+  "real_divot_5_Score": 0.005903500867691476,
+  "real_divot_factors_analyzed": 6,
+  "real_events_analyzed": 2,
+  "real_iv_0_Factor": "SIZE",
+  "real_iv_0_First Stage F": 0.554188981223523,
+  "real_iv_0_IV Estimate": -8.341132194474858,
+  "real_iv_0_OLS Estimate": 0.8906558030227194,
+  "real_iv_0_Strong Instrument": false,
+  "real_iv_1_Factor": "VALUE",
+  "real_iv_1_First Stage F": 292.94649501905707,
+  "real_iv_1_IV Estimate": -0.31583264118749066,
+  "real_iv_1_OLS Estimate": 0.0789232697643589,
+  "real_iv_1_Strong Instrument": 1.0,
+  "real_iv_2_Factor": "MOMENTUM",
+  "real_iv_2_First Stage F": 22.995797107778127,
+  "real_iv_2_IV Estimate": -2.0673496554503252,
+  "real_iv_2_OLS Estimate": -0.369322396435192,
+  "real_iv_2_Strong Instrument": 1.0,
+  "real_iv_factors_analyzed": 3,
+  "real_n_factors": 2,
+  "real_n_observations": 10175,
+  "real_pc_adjacency_matrix": "[[ 0  1  0  0  0  1 -1]\n [-1  0  0  0 -1  0 -1]\n [ 0  0  0  1  1  1  0]\n [ 0  0 -1  0  0  0 -1]\n [ 0 -1 -1  0  0  0  0]\n [-1  0 -1  0  0  0  0]\n [ 1  1  0  1  0  0  0]]",
+  "real_pc_directed_edges": [
+    [
+      "market",
+      "size"
+    ],
+    [
+      "market",
+      "investment"
+    ],
+    [
+      "excess_return",
+      "market"
+    ],
+    [
+      "excess_return",
+      "size"
+    ],
+    [
+      "value",
+      "momentum"
+    ],
+    [
+      "value",
+      "profitability"
+    ],
+    [
+      "value",
+      "investment"
+    ],
+    [
+      "excess_return",
+      "momentum"
+    ]
+  ],
+  "real_pc_edges_detected": 0,
+  "real_pc_error": null,
+  "real_pc_factor_analysis": {
+    "causes_of_returns": [],
+    "effects_of_returns": [
+      "market",
+      "size",
+      "momentum"
+    ],
+    "factor_relationships": [
+      [
+        "market",
+        "size"
+      ],
+      [
+        "market",
+        "investment"
+      ],
+      [
+        "value",
+        "momentum"
+      ],
+      [
+        "value",
+        "profitability"
+      ],
+      [
+        "value",
+        "investment"
+      ]
+    ],
+    "specification_guidance": {
+      "market": {
+        "parents": [
+          "excess_return"
+        ],
+        "children": [
+          "size",
+          "investment"
+        ]
+      },
+      "size": {
+        "parents": [
+          "market",
+          "excess_return"
+        ],
+        "children": []
+      },
+      "value": {
+        "parents": [],
+        "children": [
+          "momentum",
+          "profitability",
+          "investment"
+        ]
+      },
+      "momentum": {
+        "parents": [
+          "value",
+          "excess_return"
+        ],
+        "children": []
+      },
+      "profitability": {
+        "parents": [
+          "value"
+        ],
+        "children": []
+      },
+      "investment": {
+        "parents": [
+          "market",
+          "value"
+        ],
+        "children": []
+      }
+    }
+  },
+  "real_pc_method": "causal-learn",
+  "real_pc_undirected_edges": [],
+  "real_pc_variable_names": [
+    "market",
+    "size",
+    "value",
+    "momentum",
+    "profitability",
+    "investment",
+    "excess_return"
+  ],
+  "seed_value": 42,
+  "synthetic_anm_0_Direction": "Value \u2192 Returns",
+  "synthetic_anm_0_Factor": "Value",
+  "synthetic_anm_0_Score": 0.029745235539118675,
+  "synthetic_anm_0_True Direction": "None (placebo)",
+  "synthetic_anm_1_Direction": "Size \u2192 Returns",
+  "synthetic_anm_1_Factor": "Size",
+  "synthetic_anm_1_Score": 0.034618594033982486,
+  "synthetic_anm_1_True Direction": "Size \u2192 Returns",
+  "synthetic_anm_2_Direction": "Inconclusive",
+  "synthetic_anm_2_Factor": "Quality",
+  "synthetic_anm_2_Score": 0.0,
+  "synthetic_anm_2_True Direction": "Quality \u2192 Returns",
+  "synthetic_anm_3_Direction": "Returns \u2192 Volatility",
+  "synthetic_anm_3_Factor": "Volatility",
+  "synthetic_anm_3_Score": 0.0899870032386468,
+  "synthetic_anm_3_True Direction": "Volatility \u2192 Returns",
+  "synthetic_cic_count": 2,
+  "synthetic_cic_estimate": 0.04885935142831278,
+  "synthetic_cic_first": 0.04885935142831278,
+  "synthetic_did_count": 4,
+  "synthetic_did_estimate": 0.04923581655232385,
+  "synthetic_did_first": 0.04923581655232385,
+  "synthetic_divot_count": 2,
+  "synthetic_divot_first": null,
+  "synthetic_n_months": 48,
+  "synthetic_n_observations_total": 4800,
+  "synthetic_n_stocks": 100,
+  "synthetic_pc_adjacency_matrix": "[[ 0  0  0  0  0]\n [ 0  0  0  1  1]\n [ 0  0  0  0 -1]\n [ 0 -1  0  0  0]\n [ 0 -1 -1  0  0]]",
+  "synthetic_pc_directed_edges": [
+    [
+      "size",
+      "volatility"
+    ],
+    [
+      "size",
+      "return"
+    ]
+  ],
+  "synthetic_pc_factor_analysis": {
+    "causes_of_returns": [
+      "size"
+    ],
+    "effects_of_returns": [],
+    "factor_relationships": [
+      [
+        "size",
+        "volatility"
+      ]
+    ],
+    "specification_guidance": {
+      "value": {
+        "parents": [],
+        "children": []
+      },
+      "size": {
+        "parents": [],
+        "children": [
+          "volatility",
+          "return"
+        ]
+      },
+      "quality": {
+        "parents": [],
+        "children": []
+      },
+      "volatility": {
+        "parents": [
+          "size"
+        ],
+        "children": []
+      }
+    }
+  },
+  "synthetic_pc_method": "causal-learn",
+  "synthetic_pc_undirected_edges": [],
+  "synthetic_pc_variable_names": [
+    "value",
+    "size",
+    "quality",
+    "volatility",
+    "return"
+  ],
+  "synthetic_seed_value": 42,
+  "total_metrics_count": 143
+}

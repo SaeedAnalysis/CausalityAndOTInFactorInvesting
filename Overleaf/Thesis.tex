@@ -1,0 +1,76 @@
+\documentclass[msc, onehalfspace]{KUThesis}
+
+\usepackage{lipsum}
+\usepackage{pifont}
+\usepackage{amssymb}
+\usepackage{amsmath} % Added for better math environments
+\usepackage{booktabs} % For table formatting
+\usepackage{multirow} % For multi-row tables
+\usepackage{graphicx} % For including images
+\usepackage{tabularx, booktabs, pifont}
+
+\input{metrics_macros.tex} % Input the metrics file
+
+\title{Causal Discovery Algorithms in Factor Investing: Applications and Insights from Optimal Transport}
+\author{Saeed Ali Nasser Alameri}
+
+\department{College of Computing and Mathematical Sciences}
+\studyprogram{MSc in Computational Data Science}
+
+\addrscmember{Dr. Yerkin Kitapbayev}{Main adviser}{Khalifa University}
+\addrscmember{Dr. Jorge Passamani Zubelli}{Co-adviser}{Khalifa University}
+\addrscmember{Dr. Emanuele Olivetti}{External Co-adviser}{University of Trento}
+\addrscmember{Dr. Adriana Gabor}{RSC Member}{Khalifa University}
+
+% Pad name and affiliation with an identical horizontal skip so the
+% fifth entry lines up neatly in the right-hand column of the committee table.
+\addrscmember{\hspace*{2em}Dr. Haralampos Hatzikirou}
+             {RSC Member}
+             {\hspace*{2em}Khalifa University}
+
+\date{\currentdate}
+
+
+\abstract{Factor investing research has identified numerous return-predictive "factors," yet many of these relationships may be correlational rather than causal. This thesis investigates whether advanced causal discovery methods can distinguish genuine factor causality from spurious associations in financial markets. We develop a synthetic dataset of stock returns with pre-defined causal relationships among four common equity factors (value, size, quality, volatility) to rigorously test and compare several modern causal discovery algorithms. Subsequently, we apply this framework to real Fama-French factor data from 1990 to 2023. Our study employs a comprehensive suite of causal discovery algorithms, including the constraint-based PC algorithm, functional-based Additive Noise Models (ANM), and the optimal transport-based DIVOT method. Our synthetic data results demonstrate that the PC algorithm, powered by a large panel dataset, achieves high accuracy (75.0\%). However, the application to real financial data reveals a key finding of this thesis: a performance reversal of the methods. In the complex real-world environment, the DIVOT method proves to be the most robust, achieving an accuracy of 66.7\%, while the PC algorithm and ANM struggle significantly (16.7\% and 0.0\% accuracy, respectively). This disagreement between methods and environments highlights the nuanced, time-varying nature of financial data. The study concludes that while algorithmic causal discovery shows promise, a multi-method approach is essential for validation, and that distributional methods like DIVOT may be better suited for the complexities of real financial markets.}
+
+\addidxtrm{Causal Inference}
+\addidxtrm{Factor Investing}
+\addidxtrm{Optimal Transport}
+\addidxtrm{Matching}
+\addidxtrm{Instrumental Variables}
+\addidxtrm{Additive Noise Models}
+\addidxtrm{Distributional DiD}
+\addidxtrm{Fama-French Factors}
+\addidxtrm{Natural Experiments}
+\addidxtrm{Regime Analysis}
+
+\acknowledgment{%
+I would like to extend my deepest gratitude to my advisor, \textbf{Dr.\ Yerkin Kitapbayev}, for his guidance and support throughout this project. %
+I am also thankful to my co-advisor, \textbf{Dr.\ Jorge Passamani Zubelli}, and external co-advisor, \textbf{Dr.\ Emanuele Olivetti}, for their invaluable insights, especially in aligning this work with current research in finance and machine learning. %
+I appreciate the feedback and encouragement from my thesis examination committee members, \textbf{Dr.\ Adriana Gabor} and \textbf{Dr.\ Haralampos Hatzikirou}, which helped refine the scope and clarity of this thesis and expand my research. %
+Their encouragement has sparked my interest in pursuing a PhD to continue this project further. %
+Finally, I acknowledge the support of Khalifa University's faculty and my peers in the MSc in Computational Data Science programme, who collectively created an environment conducive to research and discovery.%
+}
+
+\begin{document}
+
+\include{Nomenclature}  % You can remove or leave empty
+
+\makecoverpages
+\makefrontpages
+
+\include{Chapters/Chapter-1}
+\include{Chapters/Chapter-2}
+\include{Chapters/Chapter-3}
+\include{Chapters/Chapter-4}
+\include{Chapters/Conclusion}
+
+\bibliographystyle{ieeetr}
+\bibliography{bibliography.bib}
+\addcontentsline{toc}{chapter}{Bibliography}
+
+\appendix
+\include{Chapters/Appendix}
+
+\printindex
+\end{document}

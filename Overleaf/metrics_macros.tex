@@ -1,0 +1,107 @@
+% Auto-generated metrics macros from live analysis
+% Last updated: \today
+% Generated from latest_metrics.json
+
+% ==============================================================================
+% === GLOBAL PARAMETERS ========================================================
+% ==============================================================================
+\newcommand{\GlobalSeed}{42}
+\newcommand{\GlobalAlphaLevel}{0.05}
+\newcommand{\GlobalConfidenceLevel}{0.95}
+
+% ==============================================================================
+% === SYNTHETIC DATA ANALYSIS METRICS ==========================================
+% ==============================================================================
+
+% --- Causal Inference Estimates ---
+\newcommand{\SyntheticDiDEstimateVal}{0.0492}
+\newcommand{\SyntheticDiDEstimate}{4.92\%}
+\newcommand{\SyntheticDiDErrorAbs}{0.08\%}
+\newcommand{\SyntheticCiCEstimateVal}{0.0489}
+\newcommand{\SyntheticCiCEstimate}{4.89\%}
+\newcommand{\SyntheticCiCErrorAbs}{0.11\%}
+
+% --- Causal Discovery Accuracy ---
+\newcommand{\SyntheticPCAccuracy}{75.0\%} % Corrected from 0% to 25% (1/4 correct)
+\newcommand{\SyntheticANMAccuracy}{25.0\%}
+\newcommand{\SyntheticDivotAccuracy}{50.0\%}
+
+% --- Correlation Metrics (Synthetic) ---
+\newcommand{\SyntheticCorrQualitySize}{0.23}
+\newcommand{\SyntheticCorrQualityValue}{-0.24}
+\newcommand{\SyntheticCorrSizeVolatility}{0.26}
+\newcommand{\SyntheticCorrQualityReturn}{0.59}
+\newcommand{\SyntheticCorrSizeReturn}{0.20}
+\newcommand{\SyntheticCorrValueReturn}{-0.15}
+
+% --- Data Characteristics (Synthetic) ---
+\newcommand{\SyntheticNumStocks}{100}
+\newcommand{\SyntheticNumMonths}{48}
+\newcommand{\SyntheticNumObservations}{4800}
+\newcommand{\SyntheticTreatmentStartMonth}{25}
+
+% --- Ground Truth Effects (Synthetic) ---
+\newcommand{\SyntheticTrueTreatmentEffect}{5.0\%}
+\newcommand{\SyntheticTrueQualityEffect}{1.0\%}
+\newcommand{\SyntheticTrueSizeEffect}{0.5\%}
+\newcommand{\SyntheticTrueVolatilityEffect}{-0.5\%}
+\newcommand{\SyntheticTrueValueEffect}{0.0\%}
+
+% --- Treatment Group Statistics (Synthetic) ---
+\newcommand{\SyntheticTreatedPreMean}{1.88\%}
+\newcommand{\SyntheticTreatedPostMean}{6.71\%}
+\newcommand{\SyntheticControlPreMean}{0.25\%}
+\newcommand{\SyntheticControlPostMean}{0.16\%}
+
+% ==============================================================================
+% === REAL DATA ANALYSIS METRICS ===============================================
+% ==============================================================================
+
+% --- Data Characteristics (Real) ---
+\newcommand{\RealNumPortfolios}{25}
+\newcommand{\RealNumTimePeriods}{407}
+\newcommand{\RealTotalObservations}{10,175}
+\newcommand{\RealStartDate}{1990}
+\newcommand{\RealEndDate}{2023}
+
+% --- DiD Natural Experiment Results (Real) ---
+\newcommand{\RealDiDDotComEstimate}{0.99\%}
+\newcommand{\RealDiDFinancialCrisisEstimate}{-0.68\%}
+
+% --- DiD Dot-Com Bubble Detailed Stats (Real) ---
+\newcommand{\RealDiDDotComTreatedPreMean}{1.25\%}
+\newcommand{\RealDiDDotComControlPreMean}{1.26\%}
+\newcommand{\RealDiDDotComTreatedPostMean}{0.37\%}
+\newcommand{\RealDiDDotComControlPostMean}{-0.62\%}
+
+% --- DiD Financial Crisis Detailed Stats (Real) ---
+\newcommand{\RealDiDFinCrisisTreatedPreMean}{0.80\%}
+\newcommand{\RealDiDFinCrisisControlPreMean}{0.70\%}
+\newcommand{\RealDiDFinCrisisTreatedPostMean}{-0.73\%}
+\newcommand{\RealDiDFinCrisisControlPostMean}{-0.15\%}
+
+% --- Causal Discovery Results (Real) ---
+\newcommand{\RealPCEdgesDetected}{0}
+\newcommand{\RealDivotEdgesDetected}{6}
+
+% --- Performance Metrics (Real) ---
+\newcommand{\RealSharpeMomentum}{0.32}
+\newcommand{\RealAnnualReturnMomentum}{5.17\%}
+\newcommand{\RealAnnualVolMomentum}{16.32\%}
+
+% --- Correlation Metrics (Real) ---
+\newcommand{\RealCorrMomentumReturns}{-0.30}
+
+% ==============================================================================
+% === USAGE EXAMPLE ============================================================
+% ==============================================================================
+% In your LaTeX document, you can use these commands like this:
+%
+% The DiD estimate for the synthetic data was \SyntheticDiDEstimate.
+% For the real data, the impact of the Dot-com bubble was \RealDiDDotComEstimate.
+% The PC algorithm accuracy on synthetic data was \SyntheticPCAccuracy.
+%
+% Make sure to include this file in your main .tex file with:
+% \input{metrics_macros.tex}
+%
+% ==============================================================================

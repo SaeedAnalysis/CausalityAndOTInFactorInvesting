@@ -1,0 +1,80 @@
+% Chapter 5: Conclusion and Future Work
+\chapter{Conclusion and Future Work}
+\label{ch:conclusion}
+
+\section{Synthesis of Key Findings}
+
+This thesis developed a comprehensive causal framework for factor investing by combining optimal transport theory with multiple causal discovery algorithms. Here, we summarize the main findings from our synthetic and real data analyses to present the core insights about causal inference in financial markets. Optimal transport, particularly through the DIVOT algorithm, anchors many of the lessons below.
+
+\subsection{The Success of Causal Methods in Controlled Environments}
+
+Our synthetic data analysis showed that when causal relationships are clear and confounding is manageable, modern causal inference methods can work very well. They can find the difference between real factors and statistical artifacts. This finding is important because it validates the theory of causal discovery in finance.
+
+\textbf{Key Insight}: The PC algorithm was the most accurate method in our controlled test, with 75\% accuracy. This success was because we used a large panel dataset, which gave the method enough statistical power. The DIVOT method was more conservative and achieved 50\% accuracy, while the ANM method struggled with the confounding in our data and only achieved 25\% accuracy.
+
+\textbf{Methodological Validation}: The idea of using multiple methods for consensus was very powerful. When methods agreed on a causal direction, they were correct. This finding suggests that for robust causal discovery, we should use and compare multiple methods, not just rely on one.
+
+\textbf{Distributional Insights}: Even when the methods did not agree on clear causal directions, the optimal transport methods still gave valuable insights about the distributions that we could not get from simple correlation analysis.
+
+\subsection{The Challenges and Limitations Revealed by Real-World Application}
+
+When we applied our methods to the real Fama-French data, we found basic limitations that show the difference between controlled experiments and complex financial markets. These findings give important insights into the limits of algorithmic causal discovery.
+
+\textbf{Key Insight}: A key finding of this thesis is the performance reversal of the causal discovery methods between the two environments. The DIVOT method, which uses a distributional approach based on optimal transport, was the most accurate on the real-world data with 66.7\% accuracy. In contrast, the PC algorithm, which was the most successful in the controlled synthetic environment (75\% accuracy), performed poorly on the real data (16.7\% accuracy). This shows that synthetic validation is necessary, but not sufficient, to predict real-world performance. The choice of method must depend on the complexity of the environment, and DIVOT's distributional approach appears more robust to the challenges of real financial markets.
+
+\textbf{Market Complexity Effects}: The mixed and sometimes conflicting results from the algorithms on real data show that financial markets are very complex. They have characteristics that violate the assumptions of simple causal models, like bidirectional relationships, time varying effects, and nonlinear dependencies. The disagreement between the methods is an important finding.
+
+\textbf{Key Insight}: The finding that momentum effects reverse their sign across different volatility regimes shows that causal relationships in finance are not static. This has very important implications for both research and practice.
+
+\subsection{The Critical Importance of Accounting for Market Regimes}
+
+Our regime analysis showed that causality itself might depend on the context. Factor effects can change a lot in different market conditions.
+
+\section{Theoretical and Practical Contributions}
+
+\subsection{Theoretical Contributions}
+
+\textbf{Integration of Optimal Transport with Causal Inference}: We showed that optimal transport can provide new metrics for causal discovery.
+
+\textbf{Multi-Method Validation Framework}: Our finding that method consensus leads to higher accuracy provides a theoretical basis for more robust causal discovery.
+
+\textbf{Context-Dependent Method Performance Theory}: Our results show that the best causal discovery method depends on the data and the complexity of the relationships.
+
+\section{Future Work}
+
+Based on our findings, we suggest several important directions for future research.
+
+\subsection{Addressing Time-Varying Causal Relationships}
+
+Our finding that factor effects change in different market regimes suggests that static causal models are not enough for financial applications. Future research should focus on developing \textbf{dynamic causal models} that adapt over time.
+
+\subsection{Expanding to High-Dimensional Factor Spaces}
+
+The "factor zoo" is very large. Future work should extend our framework to handle causal discovery with hundreds of factors.
+
+\subsection{Advanced Optimal Transport Applications}
+
+Our results suggest that optimal transport is a powerful framework for causal inference. It could be extended in several ways, for example by using non Euclidean cost functions that are more suitable for finance.
+
+\section{Conclusion}
+
+This thesis shows that a systematic approach to causal inference, which is improved with optimal transport methods, can provide a strong foundation for telling the difference between real risk factors and statistical artifacts.
+
+Our key finding is that \textbf{context is very important} for the success of causal discovery. While controlled environments allow for reliable algorithmic causal discovery, real financial markets need context specific approaches. The performance reversal of methods between synthetic and real data shows that validation requires testing in many different environments.
+
+The practical implications are important.
+
+\textbf{For Academic Researchers}:
+\begin{itemize}
+    \item Multi-method validation gives more reliable causal claims.
+    \item Regime dependent analysis is necessary for understanding factor relationships.
+\end{itemize}
+
+\textbf{For Investment Practitioners}:
+\begin{itemize}
+    \item Factor validation should go beyond correlation and use systematic causal testing.
+    \item Portfolios built on causally validated factors should be more robust.
+    \item Risk management should account for regime dependent factor behavior.
+\end{itemize}
+
+The goal of this work is to move factor investing from a simple correlation based approach to a more rigorous, causality based approach. This provides stronger foundations for investment decisions. By systematically telling the difference between real causal drivers and spurious correlations, we can build more resilient investment strategies.

@@ -1,0 +1,78 @@
+% Chapter 1: Introduction 
+\chapter{Introduction}
+
+\section{Financial Background and Motivation}
+
+For many years, researchers and investors have found many \emph{factors} that seem to explain stock returns. These include things like value, size, momentum, and low volatility. Factor investing strategies use these characteristics to select stocks. The goal is to earn extra returns. But there is a big challenge. Most factor–return relationships are based on correlation rather than causation.
+
+% OT as unifying tool
+Optimal transport offers a promising path forward by providing distributional tools we will revisit throughout this thesis.
+
+A strategy can fail if it is built on a spurious correlation. This is a big risk in factor investing. As \textbf{López de Prado} has warned, factor investing is still in an early stage if it only looks at correlation\cite{Lopez23}. Investors might choose factors that only move together with returns because of some hidden reason. If those reasons change, the strategy can fail badly. We have seen this happen in market history. The 2007 quantitative crisis, the 2009 momentum crash, and the long underperformance of the value factor are all examples.
+
+Finding which factors are true causal drivers of returns is now a very important task. This thesis helps to solve this problem. It applies modern causal discovery algorithms to factor investing. It provides a strong framework to tell the difference between real risk factors and statistical accidents.
+
+In finance, proving causality is very hard. We cannot do randomized controlled trials. When we analyze data, we have to deal with problems like endogeneity, selection bias, and structural breaks. While classic econometric methods provide some tools, this thesis explores a different approach by focusing on modern computational algorithms designed to infer causal direction directly from observational data.
+
+\section{Problem Statement and Objectives}
+
+The main research question for this thesis is: \emph{Can modern causal discovery algorithms, when combined with optimal transport methods, reliably find the difference between true causal drivers and spurious correlations in factor investing?} We also want to know what these methods can teach us about building better investment strategies. 
+
+To answer this question, we do a detailed study. We use both a synthetic dataset where we know the true causal structure, and also real world financial data. We create a set of stock returns with known causal rules. For example, we make the quality factor truly drive returns, while the value factor does not. This gives us a ground truth to test our methods against.
+
+This research has three main goals:
+
+\begin{enumerate}
+    \item \textbf{Methodological Innovation and Validation}: We want to develop and test a framework for causal discovery by comparing several algorithms. We create a realistic, simulated stock return dataset with known causal links. This lets us test our methods in a controlled world.
+    
+    \item \textbf{Comparative Analysis of Causal Discovery Methods}: We will systematically compare different causal discovery algorithms, including traditional methods like the PC algorithm and newer approaches based on Additive Noise Models (ANM) and Optimal Transport (DIVOT). We want to see which methods perform best and understand their strengths and weaknesses in a financial context.
+    
+    \item \textbf{Real-World Application and Practical Insights}: We will show that our framework can be used on real financial data. We want to provide useful insights for factor investing. This includes finding which risk factors are likely to be real drivers of returns. This can help investors build more robust strategies that can work well even when market conditions change.
+\end{enumerate}
+
+\section{Approach and Contributions}
+
+To reach our goals, we use a methodology that combines ideas from econometrics, machine learning, and optimal transport theory. We generate a large dataset of stock returns that are affected by multiple factors. We make sure the simulation is realistic by using factor correlations and volatilities that are similar to what we see in Fama-French data\cite{FamaFrench93}. 
+
+In this controlled world, we set the causal rules. Quality has a strong positive causal effect on returns. Size and volatility have smaller effects. Value is a placebo factor with no causal effect. We also add a \textit{treatment intervention}. This is a simulated policy event that affects some of the stocks. This creates a clear causal effect with a realistic confounding problem.
+
+Our analytical framework uses three different causal discovery approaches:
+
+\begin{itemize}
+    \item \textbf{Constraint-Based Method (PC Algorithm)}: We use the classic PC algorithm, which uses conditional independence tests to learn the structure of the underlying causal graph.
+    
+    \item \textbf{Functional Causal Model (Additive Noise Model)}: We apply the Additive Noise Model (ANM), which assumes a specific functional form for causal relationships and tests for the independence of noise terms.
+    
+    \item \textbf{Optimal Transport-Based Discovery (DIVOT)}: We use an improved version of the optimal transport based DIVOT method. Our DIVOT implementation uses three different metrics to decide the causal direction. This makes it more accurate.
+\end{itemize}
+
+By comparing the results of our algorithms with the known ground truth in our simulation, we can see which methods work best. We can also see how much optimal transport helps. We use many validation checks, like placebo tests, to make sure our results are genuine.
+
+The main contributions of this thesis are:
+
+\begin{enumerate}
+    \item \textbf{A unified causal discovery framework} that compares multiple techniques to provide a comprehensive approach to factor validation that is better than just looking at correlations.
+    
+    \item \textbf{The application and evaluation of an optimal transport-based method (DIVOT)} for causal discovery in finance. We show its performance relative to other established algorithms.
+    
+    \item \textbf{A rigorous comparison framework} that shows the strengths and weaknesses of different causal discovery methods in finance. It also gives practical advice on which method to choose.
+    
+    \item \textbf{Practical insights for factor investing}. Our work helps to tell the difference between real causal factors and spurious correlations. This can help investors to design more robust strategies.
+\end{enumerate}
+
+Together, these contributions help to move factor investing research from a simple correlation based world to a more rigorous, causality based approach. This provides a stronger foundation for making investment decisions.
+
+\section{Thesis Outline}
+
+The rest of this thesis is structured as follows:
+\begin{itemize}
+    \item \textbf{Chapter~\ref{ch:literature}: Literature Review} reviews the literature on causal inference in finance and optimal transport. This puts our work in context and explains the necessary mathematical ideas.
+    
+    \item \textbf{Chapter~\ref{ch:methodology}: Methodology and Experiments} explains our full methodology and experimental setup. This includes the synthetic data generation, the application of each causal discovery algorithm, and the results from our simulations. We interpret the findings and discuss the performance and limitations of each method.
+    
+    \item \textbf{Chapter~\ref{ch:realdata}: Application to Real Financial Data} applies our framework to real financial data using Fama-French research factors. We test the performance in a complex and non ideal environment. This analysis shows the potential and the limitations of algorithmic causal discovery in real financial markets.
+    
+    \item \textbf{Chapter~\ref{ch:conclusion}: Conclusion and Future Work} summarizes the key insights from both the synthetic and real data analysis. It also discusses the limitations of our study and suggests directions for future research.
+    
+    \item \textbf{The Appendix} provides extra information on data generation, detailed results, and a link to the code repository\cite{AlameriGitHub2025}.
+\end{itemize}
