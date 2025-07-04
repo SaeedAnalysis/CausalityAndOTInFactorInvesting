@@ -130,36 +130,29 @@ To get a different view, we used the Additive Noise Model (ANM), following the w
 $$Y = f(X) + \epsilon$$
 where $f$ is some function, and the noise term $\epsilon$ is independent of the cause $X$. The key idea is that this independence of the noise only holds in the true causal direction.
 
-The algorithm's decision logic relies on an asymmetry. It tests the relationship in both directions:
-\begin{itemize}
-    \itemsep0em 
-    \item \textbf{Test X $\rightarrow$ Y}: Model $Y = f(X) + \epsilon$ and test if the residuals $\epsilon$ are independent of $X$.
-    \item \textbf{Test Y $\rightarrow$ X}: Model $X = g(Y) + \eta$ and test if the residuals $\eta$ are independent of $Y$.
-\end{itemize}
 The causal direction is inferred to be the one where the independence condition holds more strongly. If both directions show similar levels of independence (or dependence), the result is considered inconclusive. This asymmetry provides the basis for determining causality.
 
-Simple linear regression can have problems with ANM. To solve this identifiability problem, our study uses a more advanced approach also suggested by Hoyer et al. (2009).
+To ensure robustness, our implementation uses two key enhancements:
 \begin{enumerate}
-    \item \textbf{Gaussian Process Regression}: Instead of a simple linear function, we use a more flexible Gaussian Process to model the function $f(X)$.
-    \item \textbf{Distance Correlation for Independence}: We use distance correlation to check for independence between a variable and the noise term. This is a more robust test that can detect non-linear dependencies.
+    \item \textbf{Gaussian Process Regression}: Instead of assuming a simple linear function, we use a more flexible Gaussian Process to model the function $f(X)$.
+    \item \textbf{Distance Correlation for Independence}: We test for independence using distance correlation, a powerful statistical tool that can detect both linear and non-linear dependencies between variables.
 \end{enumerate}
 By using these more advanced techniques, our ANM implementation is better at finding the correct causal direction, even in complex situations where simple linear models would fail.
 
 \subsubsection{ANM Decision Criteria}
 
-The ANM method uses a direct comparison approach without explicit numerical thresholds. Instead, it compares residual independence measures:
-
+The ANM method compares the independence of residuals in both causal directions. To decide the direction, we calculate an independence score (specifically, the distance correlation) for each case:
 \begin{itemize}
-    \item For $X \rightarrow Y$: Correlation between $X$ and residuals from $Y \sim f(X) + \epsilon$
-    \item For $Y \rightarrow X$: Correlation between $Y$ and residuals from $X \sim g(Y) + \eta$
+    \item For $X \rightarrow Y$: Independence score between $X$ and residuals from $Y \sim f(X) + \epsilon$
+    \item For $Y \rightarrow X$: Independence score between $Y$ and residuals from $X \sim g(Y) + \eta$
 \end{itemize}
 
-ANM selects the direction with lower absolute correlation (better independence):
+A lower score indicates stronger independence. The algorithm decides the causal direction based on which score is significantly lower, using a small threshold to avoid making decisions based on statistical noise:
 \begin{align}
-\text{Causal Direction} = \begin{cases}  
-X \rightarrow Y & \text{if } |\rho(X, \epsilon_{X \rightarrow Y})| < |\rho(Y, \eta_{Y \rightarrow X})| \\
-Y \rightarrow X & \text{if } |\rho(Y, \eta_{Y \rightarrow X})| < |\rho(X, \epsilon_{X \rightarrow Y})| \\
-\text{Inconclusive} & \text{if } |\rho(X, \epsilon_{X \rightarrow Y})| = |\rho(Y, \eta_{Y \rightarrow X})|
+\text{Direction} = \begin{cases}  
+X \rightarrow Y & \text{if } \text{score}(X \rightarrow Y) < \text{score}(Y \rightarrow X) - \text{threshold} \\
+Y \rightarrow X & \text{if } \text{score}(Y \rightarrow X) < \text{score}(X \rightarrow Y) - \text{threshold} \\
+\text{Inconclusive} & \text{otherwise}
 \end{cases}
 \end{align}
 
@@ -188,24 +181,21 @@ Our DIVOT implementation uses a systematic scoring rule that combines three type
 
 \begin{enumerate}
     \item \textbf{Transport Cost Evidence} (40\% weight): Lower Wasserstein distance shows more efficient mapping
-    \item \textbf{Residual Independence Evidence} (40\% weight): Lower correlation between predictor and residuals shows better causal fit  
+    \item \textbf{Residual Independence Evidence} (40\% weight): Lower distance correlation between predictor and residuals shows better causal fit  
     \item \textbf{Smoothness Evidence} (20\% weight): Lower entropy in transport plans shows more structured mapping
 \end{enumerate}
 
 The final direction score is computed as:
 $$S_{DIVOT} = 0.4 \cdot \Delta_{transport} + 0.4 \cdot \Delta_{residual} + 0.2 \cdot \Delta_{smoothness}$$
+where $\Delta$ represents the difference between Y$\rightarrow$X and X$\rightarrow$Y metrics. A positive score indicates X$\rightarrow$Y causality, while a negative score indicates Y$\rightarrow$X.
 
-where $\Delta$ represents the difference between Y$\rightarrow$X and X$\rightarrow$Y metrics. A positive score indicates X$\rightarrow$Y causality, while negative indicates Y$\rightarrow$X.
-
-\textbf{Decision Rule}: We classify directions based on score thresholds:
+\textbf{Decision Rule}: We classify directions based on the magnitude of the score:
 \begin{itemize}
-    \item $S_{DIVOT} > 0.02$: Strong evidence for X$\rightarrow$Y (High confidence)
-    \item $0.005 < S_{DIVOT} \leq 0.02$: Moderate evidence for X$\rightarrow$Y (Moderate confidence)  
-    \item $-0.005 \leq S_{DIVOT} \leq 0.005$: Inconclusive (Low confidence)
-    \item $S_{DIVOT} < -0.005$: Evidence for Y$\rightarrow$X causality
+    \item $|S_{DIVOT}| > 0.002$: The evidence is strong enough to assign a causal direction with \textbf{Moderate} confidence.
+    \item $|S_{DIVOT}| \leq 0.002$: The evidence is weak, and the result is deemed \textbf{Inconclusive} (Low confidence).
 \end{itemize}
 
-This scoring system successfully identified causal relationships in our synthetic data. This result indicates that DIVOT is an effective method for causal discovery in the context of factor investing. The method's strength derives from its integration of multiple sources of evidence. It employs optimal transport theory to detect the natural flow of causal influence between variables.
+This scoring system proved effective in our analysis. The method's strength derives from its integration of multiple sources of evidence, leveraging optimal transport theory to detect the natural flow of causal influence between variables.
 
 \section{Experimental Results on Synthetic Data}
 \label{sec:synthetic_results}
@@ -216,7 +206,7 @@ This section presents the results from applying our suite of causal methods to t
 This section uses several different approaches to find out which factors are real drivers of returns.
 
 \subsubsection{PC Algorithm Results}
-The PC algorithm achieved \SyntheticPCAccuracy{} accuracy in our synthetic test. It correctly identified the causal links for both the Size and Quality factors. It also correctly found that the "Value" factor has no causal link to returns. However, it failed to identify the true causal relationship for the Volatility factor.
+The PC algorithm achieved \SyntheticPCAccuracy{} accuracy in our synthetic test. It correctly identified that the "Value" factor has no causal link to returns, and it also correctly found the causal links for the Size and Volatility factors. However, it failed to identify the true causal relationship for the Quality factor, likely due to the strong confounding effect we designed into the data.
 
 \begin{table}[ht]
 \centering
@@ -228,8 +218,8 @@ The PC algorithm achieved \SyntheticPCAccuracy{} accuracy in our synthetic test.
 \midrule
 Value & Not identified as cause & None (placebo) & \checkmark \\
 Size & Size $\rightarrow$ Returns & Size $\rightarrow$ Returns & \checkmark \\
-Quality & Quality $\rightarrow$ Returns & Quality $\rightarrow$ Returns & \checkmark \\
-Volatility & Not identified as cause & Volatility $\rightarrow$ Returns & \ding{55} \\
+Quality & Not identified as cause & Quality $\rightarrow$ Returns & \ding{55} \\
+Volatility & Volatility $\rightarrow$ Returns & Volatility $\rightarrow$ Returns & \checkmark \\
 \midrule
 \textbf{Accuracy} & \multicolumn{3}{c}{\textbf{\SyntheticPCAccuracy}} \\
 \bottomrule
@@ -238,12 +228,12 @@ Volatility & Not identified as cause & Volatility $\rightarrow$ Returns & \ding{
 
 \textbf{PC Algorithm Performance}:
 \begin{itemize}
-    \item \textbf{Correct Identifications}: The PC algorithm successfully identified three of the four causal relationships. It correctly found the causal direction for the Size and Quality factors, and also correctly identified that the Value (placebo) factor has no effect.
-    \item \textbf{Missed Relationship}: It only failed to find the true causal link for the Volatility factor. This is a very strong performance for the algorithm on this dataset.
+    \item \textbf{Correct Identifications}: The PC algorithm successfully identified three of the four causal relationships. It correctly found the causal direction for the Size and Volatility factors, and also correctly identified that the Value (placebo) factor has no effect.
+    \item \textbf{Missed Relationship}: It only failed to find the true causal link for the Quality factor. This is a very strong performance for the algorithm on this dataset.
 \end{itemize}
 
 \subsubsection{ANM Results}
-Table~\ref{tab:anm_results_enhanced} presents the ANM results. The method achieved \SyntheticANMAccuracy accuracy. It correctly identified the direction for the Size factor, but it gave incorrect or inconclusive results for the other three factors. This poor performance suggests that ANM, even with the Gaussian Process Regression implemention, struggled to find the causal relationships in our synthetic financial data.
+Table~\ref{tab:anm_results_enhanced} presents the ANM results. The method achieved \SyntheticANMAccuracy{} accuracy. It correctly identified the direction for the Size factor, but it gave incorrect or inconclusive results for the other three factors. This poor performance suggests that ANM, even with the Gaussian Process Regression implementation, struggled to find the causal relationships in our synthetic financial data.
 
 \begin{table}[ht]
 \centering
@@ -251,144 +241,54 @@ Table~\ref{tab:anm_results_enhanced} presents the ANM results. The method achiev
 \label{tab:anm_results_enhanced}
 \begin{tabular}{lccc}
 \toprule
-\textbf{Factor} & \textbf{ANM Direction} & \textbf{True Causal Relation} & \textbf{Correct} \\
+\textbf{Factor} & \textbf{ANM Prediction} & \textbf{Ground Truth} & \textbf{Correctness} \\
 \midrule
-Value & Value $\rightarrow$ Returns & None (placebo factor) & \ding{55} \\
+Value & Value $\rightarrow$ Returns & None (placebo) & \ding{55} \\
 Size & Size $\rightarrow$ Returns & Size $\rightarrow$ Returns & \checkmark \\
 Quality & Inconclusive & Quality $\rightarrow$ Returns & \ding{55} \\
 Volatility & Returns $\rightarrow$ Volatility & Volatility $\rightarrow$ Returns & \ding{55} \\
 \midrule
-\textbf{Overall Accuracy} & \multicolumn{3}{c}{\textbf{\SyntheticANMAccuracy}} \\
+\textbf{Accuracy} & \multicolumn{3}{c}{\textbf{\SyntheticANMAccuracy}} \\
 \bottomrule
-\multicolumn{4}{l}{\footnotesize *Using Gaussian Process regression and HSIC-inspired} \\
-\multicolumn{4}{l}{\footnotesize distance correlation following Hoyer et al. (2009)} \\
 \end{tabular}
 \end{table}
 
 \subsubsection{DIVOT Results}
-The DIVOT analysis achieved \SyntheticDivotAccuracy accuracy. It correctly identified the causal relationships for the Size and Quality factors. This was the best performance among the causal discovery methods we tested. However, it failed to correctly identify the relationships for the Value (placebo) and Volatility factors, which shows that it is still not a perfect method.
-
-The transport cost analysis, shown in Table~\ref{tab:transport_costs}, reveals meaningful asymmetries between causal directions. These asymmetric transport costs reflect our implementation of causally-motivated penalties that break the fundamental symmetry of marginal distribution optimal transport. Value, Size, and Quality factors show positive cost differences (Returns→Factor more expensive than Factor→Returns), while Volatility shows negative asymmetry (-0.0266), indicating different optimal transport structures. These asymmetries enabled DIVOT to achieve its accuracy by correctly identifying Size and Quality factor directions.
+The DIVOT algorithm, which uses optimal transport, had mixed results on the synthetic data, achieving \SyntheticDivotAccuracy{} accuracy. While it successfully identified the causal direction for the Size and Quality factors, it made errors on the Value and Volatility factors. The error on the Value (placebo) factor is a notable failure, as it suggests the method may be prone to finding causal links where none exist.
 
 \begin{table}[ht]
 \centering
-\caption{Transport Costs Summary (Wasserstein-2 Distances with Asymmetric Penalties)}
-\label{tab:transport_costs}
+\caption{DIVOT Causal Discovery Results vs. Ground Truth}
+\label{tab:divot_results}
 \begin{tabular}{lccc}
 \toprule
-\textbf{Factor} & \textbf{X$\rightarrow$Y Cost} & \textbf{Y$\rightarrow$X Cost} & \textbf{Cost Difference} \\
-\midrule
-Value & 0.3339 & 0.3611 & +0.0272 \\
-Size & 0.2765 & 0.3029 & +0.0264 \\
-Quality & 0.2696 & 0.2953 & +0.0257 \\
-Volatility & 0.3158 & 0.2892 & -0.0266 \\
-\bottomrule
-\end{tabular}
-\vspace{0.5em}
-\begin{minipage}{\textwidth}
-\footnotesize
-\textit{Note:} Transport costs computed using Wasserstein-2 distance with causally-motivated asymmetric penalties. Cost differences of $\pm$0.026 indicate meaningful asymmetry vs. previous symmetric values.
-\end{minipage}
-\end{table}
-
-To illustrate the concept of transport map smoothness, we can visually inspect the transport plans. A smoother plan, which indicates a more natural and efficient mapping between distributions, is considered evidence for a causal link. As shown in Figure~\ref{fig:transport_smoothness}, the transport map from quality to returns is visibly smoother and more structured than in the reverse direction.
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=0.9\textwidth]{Graphs/Synthetic/transport_smoothness_analysis.png}
-\caption{Transport map smoothness analysis demonstrating causal direction through optimal transport asymmetry. The blue line represents Quality → Returns transport (cost: 0.270), which has been smoothed to highlight its naturally smooth structure. The red line shows Returns → Quality transport (cost: 0.295), displaying natural oscillations that indicate higher transport complexity. The dotted line represents identity transport for reference. The consistently lower cost and smoother transport from Quality to Returns provides evidence for the causal direction Quality → Returns, supporting the DIVOT methodology's use of transport cost asymmetry for causal discovery.}
-\label{fig:transport_smoothness}
-\end{figure}
-
-\begin{table}[ht]
-\centering
-\caption{DIVOT Causal Discovery Results Following Tu et al. (2022)}
-\label{tab:divot_enhanced_results}
-\begin{tabular}{lccc}
-\toprule
-\textbf{Factor} & \textbf{DIVOT Result} & \textbf{True Direction} & \textbf{Correct} \\
+\textbf{Factor} & \textbf{DIVOT Prediction} & \textbf{Ground Truth} & \textbf{Correctness} \\
 \midrule
 Value & Value $\rightarrow$ Returns & None (placebo) & \ding{55} \\
 Size & Size $\rightarrow$ Returns & Size $\rightarrow$ Returns & \checkmark \\
 Quality & Quality $\rightarrow$ Returns & Quality $\rightarrow$ Returns & \checkmark \\
 Volatility & Returns $\rightarrow$ Volatility & Volatility $\rightarrow$ Returns & \ding{55} \\
 \midrule
-\textbf{Overall Accuracy} & \multicolumn{3}{c}{\textbf{\SyntheticDivotAccuracy}} \\
+\textbf{Accuracy} & \multicolumn{3}{c}{\textbf{\SyntheticDivotAccuracy}} \\
 \bottomrule
-\multicolumn{4}{l}{\footnotesize Using asymmetric transport penalties and Wasserstein-2 distance} \\
 \end{tabular}
 \end{table}
 
-\subsection{Multi-Method Comparison and Discussion}
-
-We now compare the results from all three causal discovery methods. This helps us see which methods work best and when we can be most confident in a causal claim.
-
-Table~\ref{tab:comprehensive_method_comparison_updated} presents the complete comparison across all three methods:
+\subsection{Summary of Method Performance}
 
 \begin{table}[ht]
 \centering
-\caption{Comprehensive Causal Discovery Method Comparison}
-\label{tab:comprehensive_method_comparison_updated}
-\footnotesize % Use even smaller font
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lccccc}
+\caption{Overall Comparison of Causal Discovery Methods on Synthetic Data}
+\label{tab:causal_methods_comparison}
+\begin{tabular}{lccc}
 \toprule
-\textbf{Factor} & \textbf{True Direction} & \textbf{PC Result} & \textbf{ANM} & \textbf{DIVOT} & \textbf{Consensus} \\
+\textbf{Method} & \textbf{Accuracy} & \textbf{Identified Placebo} & \textbf{Notes} \\
 \midrule
-Value & None & No relation \checkmark & Value→Returns \ding{55} & Value→Returns \ding{55} & Weak \\
-Size & Size→Returns & Size→Returns \checkmark & Size→Returns \checkmark & Size→Returns \checkmark & Strong \\
-Quality & Quality→Returns & Quality→Returns \checkmark & Inconclusive \ding{55} & Quality→Returns \checkmark & Moderate \\
-Volatility & Volatility→Returns & No relation \ding{55} & Returns→Volatility \ding{55} & Returns→Volatility \ding{55} & Weak \\
-\midrule
-\textbf{Accuracy} & & \textbf{\SyntheticPCAccuracy} & \textbf{\SyntheticANMAccuracy} & \textbf{\SyntheticDivotAccuracy} & \textbf{-} \\
+PC Algorithm & \SyntheticPCAccuracy & Yes & Strongest performer, but missed one link \\
+DIVOT & \SyntheticDivotAccuracy & No & Found two links, but failed on placebo \\
+ANM & \SyntheticANMAccuracy & No & Weakest performer, struggled with confounding \\
 \bottomrule
-\end{tabular}%
-}
+\end{tabular}
 \end{table}
 
-A visual summary of these results, presented in Figure~\ref{fig:all_method_comparison} in the Appendix, shows the network graph produced by each method alongside the ground truth. This comparison shows that even in a controlled synthetic environment, discovering causal relationships is difficult. No single method was perfect, and the level of disagreement between them is a reason to be cautious. The PC algorithm showed the most promise, but it was still not perfect.
-
-\subsubsection*{Key Insights from Multi-Method Analysis}
-
-\textbf{1. Consensus Analysis}:
-\begin{itemize}
-    \item \textbf{Strong Consensus}: For the Size factor, all three methods (PC, ANM, and DIVOT) agreed on the correct direction. This gives us high confidence in this causal link.
-    \item \textbf{Moderate Consensus}: For the Quality factor, two methods (PC and DIVOT) agreed on the correct direction.
-    \item \textbf{Disagreement}: For the Value and Volatility factors, the methods disagreed or were incorrect. This lack of agreement suggests that the causal signals for these factors are weak or that some methods are not robust enough.
-\end{itemize}
-
-This comparison shows that even in a controlled synthetic environment, discovering causal relationships is difficult. No single method was perfect, and the level of disagreement between them is a reason to be cautious. The PC algorithm showed the most promise, but it was still not perfect.
-
-\subsubsection{DIVOT Limitations and Symmetric Cost Problem}
-
-The symmetric transport costs observed in our analysis represent a fundamental limitation of the current DIVOT implementation that requires careful consideration:
-
-\textbf{Root Cause Analysis}:
-\begin{enumerate}
-    \item \textbf{Data Characteristics}: Our synthetic data exhibits relatively homogeneous distributions for both factors and returns, leading to similar transport costs in both directions
-    \item \textbf{Linear Relationships}: The predominantly linear causal relationships in our simulation may not generate sufficient distributional asymmetry for optimal transport detection
-    \item \textbf{Sample Size Constraints}: The transport cost estimation may require larger sample sizes to detect subtle directional differences
-    \item \textbf{POT Library Limitations}: The Python Optimal Transport library implementation may have insufficient sensitivity for financial data characteristics
-\end{enumerate}
-
-\textbf{Potential Solutions for Future Research}:
-\begin{itemize}
-    \item \textbf{Alternative Transport Metrics}: Explore different Wasserstein variants, Sinkhorn regularization, or Earth Mover's Distance implementations
-    \item \textbf{Non-linear Causal Effects}: Test DIVOT performance with synthetic data containing non-linear causal relationships that create more distributional asymmetry
-    \item \textbf{Time-Series Extensions}: Incorporate temporal dependencies that may create directional transport complexity differences
-    \item \textbf{Regularization Techniques}: Apply regularization to transport plans to enhance directional sensitivity
-    \item \textbf{Multi-Scale Analysis}: Examine transport costs at different distributional scales or quantile levels
-    \item \textbf{Expanded Factor Space}: Increase the number of factors beyond the current four to reduce sensitivity in accuracy measurements and provide more robust testing of causal discovery methods
-\end{itemize}
-
-\subsubsection*{Discussion of Synthetic Data Results}
-
-The analysis of the synthetic data provides several key takeaways regarding the performance of causal discovery methods in a controlled financial setting.
-
-\textbf{Method Performance}: The different algorithms showed varied success. The PC algorithm was the most effective, achieving \SyntheticPCAccuracy{} accuracy. Its performance underscores the importance of using panel data, which provides greater statistical power for its conditional independence tests. DIVOT was the next most successful with \SyntheticDivotAccuracy{} accuracy, while ANM achieved \SyntheticANMAccuracy{} accuracy. The strong consensus for the Size factor, where all three methods agreed on the correct causal direction, suggests that multi-method agreement is a strong indicator of a true causal link.
-
-\textbf{Algorithmic Behavior}: The algorithms displayed useful conservative behavior. For instance, the PC algorithm did not identify a direct causal link for the Quality factor, correctly showing that its effect was difficult to distinguish from the treatment confounding. This reluctance to make a causal claim under uncertainty is a valuable feature for financial applications, where false discoveries can be costly. Similarly, DIVOT's inconclusive findings for some factors highlight its cautious nature.
-
-\textbf{Limitations}: The analysis also revealed limitations. The symmetric transport costs in the initial DIVOT implementation showed a potential weakness in using standard optimal transport for this type of financial data. Future research could explore alternative transport metrics or non-linear data structures to address this. The mixed performance of ANM suggests it may be less suited to this specific data structure with confounding.
-
-In summary, the synthetic data experiments validate the overall framework. They show that with sufficient data and careful application, causal discovery algorithms can distinguish between causal factors and spurious correlations. However, they also show that no single method is perfect and that a multi-method, consensus-based approach is most reliable.
+The results show that the PC algorithm was the most reliable on our synthetic data. DIVOT showed promise but needs to be used with caution, as it incorrectly identified the placebo factor as causal. ANM's performance suggests it may not be well-suited for this type of financial data. These findings provide a crucial baseline before we apply the methods to more complex real-world data in the next chapter.

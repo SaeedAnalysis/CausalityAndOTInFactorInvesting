@@ -9,11 +9,11 @@ We proceed as follows. Section~\ref{sec:real_data_description} describes the dat
 \section{Data Description and Preparation}
 \label{sec:real_data_description}
 
-We got our data from the Kenneth French data library, accessed in 2024. It contains monthly factor returns and portfolio returns from July 1963 to March 2025. For our main analysis, we focused on the period from \textbf{January \RealStartDate{} to December \RealEndDate{}}. We did this to make sure we have consistent and high quality data for all factors. The data includes:
+We obtained our data from the Kenneth French data library, which contains monthly factor and portfolio returns. For our analysis, we focused on the period from \textbf{January \RealStartDate{} to December \RealEndDate{}}. This specific timeframe was chosen to ensure consistent data quality and availability across all factors and portfolios used in the study. The data includes:
 \begin{itemize}
     \item The three classic Fama-French factors: Market excess return (Mkt-RF), Size (SMB), and Value (HML).
     \item The newer five factor model additions: Profitability (RMW) and Investment (CMA).
-    \item The Momentum factor (Mom).
+    \item The Momentum factor (WML).
     \item \RealNumPortfolios{} portfolios that are sorted by size and book to market ratio.
 \end{itemize}
 
@@ -25,7 +25,7 @@ The factor abbreviations stand for:
     \item \textbf{HML}: High Minus Low (Value factor)
     \item \textbf{RMW}: Robust Minus Weak (Profitability factor)
     \item \textbf{CMA}: Conservative Minus Aggressive (Investment factor)
-    \item \textbf{Mom}: Momentum factor
+    \item \textbf{WML}: Winners Minus Losers (Momentum factor)
 \end{itemize}
 
 \subsection*{Theoretical Causal Benchmarks}
@@ -39,7 +39,7 @@ This theoretical benchmark allows us to evaluate how well each algorithm's findi
 \subsection*{Data Quality and Preprocessing}
 To ensure the quality of our analysis, we performed several data preprocessing steps. First, we filtered the raw data to our analysis period of 1990 to 2023. During data preparation, we identified and removed duplicate entries where the same portfolio appeared multiple times for the same month, ensuring each observation is unique. Any rows with remaining missing values were also removed.
 
-After cleaning, we created the final panel dataset. We used the 25 portfolios as the individual units in our panel. Each portfolio has a different exposure to the factors because of how they are sorted. The final panel has 10,200 unique portfolio-month observations.
+After cleaning, we created the final panel dataset. We used the 25 portfolios as the individual units in our panel. Each portfolio has a different exposure to the factors because of how they are sorted. The final panel has \RealTotalObservations{} unique portfolio-month observations.
 
 \section{Methodologies for Real World Analysis}
 \label{sec:real_methods}
@@ -154,7 +154,7 @@ This mixed performance shows that while the PC algorithm can find important stru
 The ANM analysis on the real-world data resulted in an accuracy of 0\% (0 out of 6 correct). The algorithm produced several inconclusive results and misidentified the direction for the remaining factors.
 
 \begin{itemize}
-    \item \textbf{Incorrectly Identified Relationships}: The algorithm concluded that returns cause the HML (Value) and RMW (Profitability) factors. It also incorrectly suggested that the Momentum factor causes returns, which contradicts the theoretical understanding that momentum is driven by past returns.
+    \item \textbf{Incorrectly Identified Relationships}: The algorithm concluded that returns cause the HML (Value) and RMW (Profitability) factors. It also incorrectly suggested that the Momentum (WML) factor causes returns, which contradicts the theoretical understanding that momentum is driven by past returns.
     \item \textbf{Inconclusive Results}: For the Market, Size, and Investment factors, the algorithm could not determine a clear causal direction.
 \end{itemize}
 
@@ -194,7 +194,7 @@ Table~\ref{tab:causal_methods_comparison_real} compares the performance of the P
 Market & Mkt→Ret & No link & \ding{55} & Inconclusive & \ding{55} & Mkt→Ret & \checkmark & DIVOT Better \\
 Size & SMB→Ret & No link & \ding{55} & Inconclusive & \ding{55} & SMB→Ret & \checkmark & DIVOT Better \\
 Value & HML→Ret & No link & \ding{55} & Ret→HML & \ding{55} & HML→Ret & \checkmark & DIVOT Better \\
-Momentum & Ret→Mom & No link & \ding{55} & WML→Ret & \ding{55} & WML→Ret & \ding{55} & All Wrong \\
+Momentum & Ret→WML & No link & \ding{55} & WML→Ret & \ding{55} & WML→Ret & \ding{55} & All Wrong \\
 Profitability& RMW→Ret & RMW→Ret & \checkmark & Ret→RMW & \ding{55} & Ret→RMW & \ding{55} & PC Better \\
 Investment & CMA→Ret & No link & \ding{55} & Inconclusive & \ding{55} & CMA→Ret & \checkmark & DIVOT Better \\
 \midrule
@@ -246,20 +246,18 @@ Our application to real financial data shows several basic challenges that make 
 Our application to real financial data gave several important insights that add to and challenge our synthetic results.
 
 \begin{enumerate}
-    \item \textbf{Complexity of real markets}: The general failure of our causal discovery methods suggests that real factor and return relationships are more complex than simple causal models can capture.
-    
-    \item \textbf{Performance reversal reveals method limitations}: The complete change in method performance between real and synthetic data is a key finding. It shows that the choice of method depends on the context.
-    
-    \item \textbf{Factor correlations complicate attribution}: High correlations between some factors suggest that some factor models may be redundant. It also makes it hard to find the true cause.
-    
-    \item \textbf{Market efficiency implications}: The lack of clear general causal patterns may be because of market efficiency. Causal relationships may evolve as the market learns.
+    \item \textbf{Complexity of real markets}: The mixed results from our causal discovery methods suggest that real factor and return relationships are more complex than simple causal models can capture. The disagreement between methods is not a failure, but a finding in itself. It shows that we need to be cautious when we interpret the results of any single method.
+    \item \textbf{Performance reversal}: The performance of the methods was very different on real data compared to synthetic data. The PC algorithm, which was the best on synthetic data, performed poorly on real data. In contrast, DIVOT, which was only moderately successful on synthetic data, was the best performer on real data. This is a key finding of our work. It shows that the best causal discovery method depends on the data and the relationships you are studying.
+    \item \textbf{Value of a multi-method approach}: The fact that the methods often disagreed highlights the value of using a multi-method approach. When methods agree, we can be more confident in the result. When they disagree, it tells us that the relationship is complex and we need to be cautious.
 \end{enumerate}
 
-These findings show both the potential and the limitations of using causal inference in factor investing.
+This was a key finding about the differences between a controlled experiment and the complex reality of financial markets. We also found that even with these challenges, our causal discovery methods provided valuable insights. They helped us understand which factors are more likely to be true drivers of returns, and which are more likely to be statistical artifacts.
 
-The difference between our successful synthetic analysis and the challenging real data analysis shows the importance of:
-\begin{itemize}
-    \item Using multiple analytical methods.
-    \item Understanding the limits of simple causal models in complex financial markets.
-    \item Developing more advanced methods for time varying and nonlinear causal relationships.
-\end{itemize}
+Our application of causal discovery methods to real financial data gives several important insights that add to and challenge our synthetic results.
+\begin{enumerate}
+    \item \textbf{Complexity of real markets}: The mixed results from our causal discovery methods suggest that real factor and return relationships are more complex than simple causal models can capture. The disagreement between methods is not a failure, but a finding in itself. It shows that we need to be cautious when we interpret the results of any single method.
+    \item \textbf{Performance reversal}: The performance of the methods was very different on real data compared to synthetic data. The PC algorithm, which was the best on synthetic data, performed poorly on real data. In contrast, DIVOT, which was only moderately successful on synthetic data, was the best performer on real data. This is a key finding of our work. It shows that the best causal discovery method depends on the data and the relationships you are studying.
+    \item \textbf{Value of a multi-method approach}: The fact that the methods often disagreed highlights the value of using a multi-method approach. When methods agree, we can be more confident in the result. When they disagree, it tells us that the relationship is complex and we need to be cautious.
+\end{enumerate}
+
+In summary, while the real-world application did not yield the clean results of the synthetic analysis, it provided a more valuable lesson: causal inference in finance is a difficult but essential task. The challenges encountered underscore the need for robust, multi-faceted approaches like the one developed in this thesis.

@@ -162,7 +162,7 @@ The final panel dataset was constructed from the raw Fama-French data files thro
     \item \textbf{Handling Missing Data}: Any rows with missing values for either portfolio returns or factor returns were removed from the dataset.
     \item \textbf{Panel Construction}: The cleaned data was then transformed from a time-series format into a panel structure, with each of the 25 portfolios treated as an individual unit observed over time.
 \end{enumerate}
-The final dataset contains 10,200 unique observations. This number is not equal to 25 portfolios multiplied by the number of months because some portfolios had missing data for certain periods in the raw data files.
+The final dataset contains \RealTotalObservations{} unique observations. This number is not equal to 25 portfolios multiplied by the number of months because some portfolios had missing data for certain periods in the raw data files.
 
 \subsection*{Reproducibility Note}
 The exact observation count in a replication of this study may vary slightly. This can be due to small differences in duplicate handling logic, the inclusion or exclusion of boundary dates, or the treatment of missing data. Our analysis uses a strict duplicate removal process and includes the full date range specified.
@@ -170,16 +170,16 @@ The exact observation count in a replication of this study may vary slightly. Th
 \section*{Data Overview}
 \begin{table}[H]
     \centering
-    \caption{Fama-French data characteristics. Data preprocessing included removal of duplicate portfolio-month observations and filtering to the 1990-2023 period to ensure data quality and consistency. The final panel contains 10,200 unique observations.}
+    \caption{Fama-French data characteristics. Data preprocessing included removal of duplicate portfolio-month observations and filtering to the 1990-2023 period to ensure data quality and consistency. The final panel contains \RealTotalObservations{} unique observations.}
     \begin{tabular}{|l|c|}
         \hline
         \textbf{Parameter} & \textbf{Value} \\
         \hline
-        Data period & July 1963 -- March 2025 \\
-        Number of months & 741 \\
+        Data period & 1990 -- 2023 \\
+        Number of months & 408 \\
         Number of portfolios & 25 (5$\times$5 size/value sorted) \\
-        Panel observations & 10,175 \\
-        Factors included & Mkt-RF, SMB, HML, RMW, CMA, Mom \\
+        Panel observations & \RealTotalObservations{} \\
+        Factors included & Mkt-RF, SMB, HML, RMW, CMA, WML \\
         Data source & Kenneth French Data Library\cite{FrenchData2024} \\
         \hline
     \end{tabular}
@@ -188,17 +188,17 @@ The exact observation count in a replication of this study may vary slightly. Th
 \section*{Factor Summary Statistics}
 \begin{table}[H]
     \centering
-    \caption{Monthly factor return statistics (1963-2025)}
+    \caption{Monthly factor return statistics (1990-2023)}
     \begin{tabular}{|l|c|c|c|c|}
         \hline
         \textbf{Factor} & \textbf{Mean (\%)} & \textbf{Std Dev (\%)} & \textbf{Min (\%)} & \textbf{Max (\%)} \\
         \hline
-        Market (Mkt-RF) & 0.58 & 4.48 & -23.19 & 16.10 \\
-        Size (SMB)      & 0.18 & 3.04 & -15.54 & 18.46 \\
-        Value (HML)     & 0.29 & 2.97 & -13.83 & 12.86 \\
-        Momentum (Mom)  & 0.60 & 4.18 & -34.30 & 18.00 \\
-        Profitability (RMW) & 0.28 & 2.22 & -18.95 & 13.05 \\
-        Investment (CMA)    & 0.25 & 2.06 & -7.08  & 9.01 \\
+        Market (Mkt-RF) & 0.71 & 4.44 & -17.20 & 13.58 \\
+        Size (SMB)      & 0.12 & 3.04 & -15.54 & 18.46 \\
+        Value (HML)     & 0.15 & 3.24 & -13.83 & 12.86 \\
+        Momentum (WML)  & 0.42 & 4.71 & -34.30 & 18.00 \\
+        Profitability (RMW) & 0.38 & 2.63 & -18.95 & 13.05 \\
+        Investment (CMA)    & 0.20 & 2.18 & -7.08  & 9.01 \\
         \hline
     \end{tabular}
 \end{table}
@@ -219,7 +219,7 @@ The exact observation count in a replication of this study may vary slightly. Th
 \end{table}
 
 \noindent
-The mixed results from the causal discovery methods on real data contrast sharply with their performance on synthetic data. This highlights the complexity of real financial markets where simple causal models are often insufficient. However, the methods still provide valuable insights. For example, both the PC algorithm and DIVOT correctly identified that returns drive the momentum factor, which is consistent with financial theory.
+The mixed results from the causal discovery methods on real data contrast sharply with their performance on synthetic data. This highlights the complexity of real financial markets where simple causal models are often insufficient. However, the methods still provide valuable insights. For example, the RMW factor was identified as causally relevant by multiple algorithms, even if they disagreed on the direction. This suggests it is a significant factor worthy of further investigation. None of the methods were able to correctly identify that returns drive the momentum factor, which highlights the challenge of detecting known feedback loops in noisy financial data.
 
 
 % -------------------------------------------------------------------
@@ -236,12 +236,13 @@ All code, data processing scripts, and visualisation tools used in this thesis a
 \section*{Repository Structure}
 The repository is organised as follows:
 \begin{itemize}
-    \item \texttt{Python/Analysis/}: Core analysis scripts including causal discovery implementations, DiD analysis, and factor modelling
-    \item \texttt{Python/Visualization/}: Scripts for generating all figures and plots
-    \item \texttt{Real\_Data/}: Fama-French data files and processing scripts
-    \item \texttt{Graphs/}: Output directory containing all generated figures (split into Synthetic and Real Data subdirectories)
-    \item \texttt{Overleaf/}: LaTeX source files for the thesis
-    \item \texttt{requirements.txt}: Python package dependencies
+    \item \texttt{Python/Analysis/}: Core analysis scripts for synthetic and real data, including causal discovery implementations.
+    \item \texttt{Python/Jupyter/}: Jupyter Notebook versions of the core analysis scripts for interactive exploration.
+    \item \texttt{Python/Graphs/Generation Scripts/}: Scripts for generating all figures and plots.
+    \item \texttt{Real\_Data/}: Fama-French data files and associated data-loading functions.
+    \item \texttt{Graphs/}: Output directory containing all generated figures.
+    \item \texttt{Overleaf/}: LaTeX source files for the thesis.
+    \item \texttt{requirements.txt}: Python package dependencies.
 \end{itemize}
 
 \section*{Reproducibility}
